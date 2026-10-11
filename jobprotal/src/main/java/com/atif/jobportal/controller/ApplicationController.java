@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -25,10 +26,13 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<ApplicationResponseDTO> createApplication(
-            @Valid @RequestBody ApplicationRequestDTO request) {
+            @Valid @RequestBody ApplicationRequestDTO request,
+            Authentication authentication) {
+
+        String email = authentication.getName();
 
         ApplicationResponseDTO response =
-                applicationService.createApplication(request);
+                applicationService.createApplication(request, email);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

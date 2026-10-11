@@ -6,6 +6,8 @@ import com.atif.jobportal.entity.User;
 import com.atif.jobportal.exception.UserNotFoundException;
 import com.atif.jobportal.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.atif.jobportal.security.UserRole;
 
 import java.util.List;
 
@@ -14,9 +16,14 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository ,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder =passwordEncoder;
     }
+
 
     public UserResponseDTO createUser(UserRequestDTO request) {
 
@@ -24,10 +31,19 @@ public class UserService {
 
         updateUserFields(user, request);
 
+        // Public registration always creates a Job Seeker
+        user.setRole(UserRole.JOB_SEEKER.name());
+
+        // Encrypt the password before saving
+        user.setPassword(
+                passwordEncoder.encode(user.getPassword())
+        );
+
         User savedUser = userRepository.save(user);
 
         return convertToResponseDTO(savedUser);
     }
+
 
     public List<UserResponseDTO> getAllUsers() {
 

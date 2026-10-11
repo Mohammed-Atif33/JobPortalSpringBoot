@@ -16,7 +16,7 @@ import com.atif.jobportal.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+import com.atif.jobportal.entity.User;
 @Service
 public class ApplicationService {
 
@@ -35,21 +35,20 @@ public class ApplicationService {
     }
 
     public ApplicationResponseDTO createApplication(
-            ApplicationRequestDTO request) {
+            ApplicationRequestDTO request,
+            String email) {
 
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "User not found with id: "
-                                        + request.getUserId()
+                                "User not found with email: " + email
                         )
                 );
 
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() ->
                         new JobNotFoundException(
-                                "Job not found with id: "
-                                        + request.getJobId()
+                                "Job not found with id: " + request.getJobId()
                         )
                 );
 
@@ -57,8 +56,6 @@ public class ApplicationService {
 
         application.setUser(user);
         application.setJob(job);
-
-        // New application always starts with APPLIED status
         application.setStatus(ApplicationStatus.APPLIED);
 
         Application savedApplication =

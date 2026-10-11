@@ -4,22 +4,8 @@ import jakarta.validation.constraints.NotNull;
 
 public class ApplicationRequestDTO {
 
-    @NotNull(message = "User ID cannot be null")
-    private Long userId;
-
-    @NotNull(message = "Job ID cannot be null")
+    @NotNull(message = "Job ID is required")
     private Long jobId;
-
-    public ApplicationRequestDTO() {
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
 
     public Long getJobId() {
         return jobId;
