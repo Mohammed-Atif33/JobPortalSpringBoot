@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | JobPortal</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="logo" href="index.html">JobPortal</a>
+        <div class="nav-links">
+            <a href="index.html">Home |</a>
+            <a href="jobs.html">Find Jobs |</a>
+            <a href="login.html">Login</a>
+        </div>
+    </nav>
+
+    <main class="auth-section">
+        <div class="auth-card">
+            <h1>Create an Account</h1>
+            <p>Join JobPortal and find your next opportunity.</p>
+
+            <form id="register-form">
+                <input
+                    type="text"
+                    id="register-name"
+                    placeholder="Full name"
+                    required
+                >
+                <input
+                    type="email"
+                    id="register-email"
+                    placeholder="Email address"
+                    required
+                >
+                <input
+                    type="password"
+                    id="register-password"
+                    placeholder="Password"
+                    required
+                >
+                <button type="submit">Register</button>
+                <p id="register-message" role="status" aria-live="polite"></p>
+            </form>
+
+            <p>Already have an account?
+                <a href="login.html">Login here</a>
+            </p>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p>
+    </footer>
+</body>
+</html>

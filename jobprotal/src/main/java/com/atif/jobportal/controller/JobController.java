@@ -24,8 +24,7 @@ public class JobController {
     public ResponseEntity<JobResponseDTO> createJob(
             @Valid @RequestBody JobRequestDTO request) {
 
-        JobResponseDTO response =
-                jobService.createJob(request);
+        JobResponseDTO response = jobService.createJob(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -35,8 +34,15 @@ public class JobController {
     @GetMapping
     public ResponseEntity<List<JobResponseDTO>> getAllJobs() {
 
-        List<JobResponseDTO> jobs =
-                jobService.getAllJobs();
+        List<JobResponseDTO> jobs = jobService.getAllJobs();
+
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<JobResponseDTO>> getMyJobs() {
+
+        List<JobResponseDTO> jobs = jobService.getMyJobs();
 
         return ResponseEntity.ok(jobs);
     }
@@ -45,8 +51,7 @@ public class JobController {
     public ResponseEntity<JobResponseDTO> getJobById(
             @PathVariable Long id) {
 
-        JobResponseDTO response =
-                jobService.getJobById(id);
+        JobResponseDTO response = jobService.getJobById(id);
 
         return ResponseEntity.ok(response);
     }
@@ -56,18 +61,20 @@ public class JobController {
             @PathVariable Long id,
             @Valid @RequestBody JobRequestDTO request) {
 
-        JobResponseDTO response =
-                jobService.updateJob(id, request);
+        JobResponseDTO response = jobService.updateJob(id, request);
 
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteJob(
-            @PathVariable Long id) {
-
-        jobService.deleteJob(id);
-
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteJob(@PathVariable Long id) {
+        try {
+            jobService.deleteJob(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(java.util.Map.of("message", e.getMessage()));
+        }
     }
 }

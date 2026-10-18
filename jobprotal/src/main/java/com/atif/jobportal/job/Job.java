@@ -1,5 +1,6 @@
 package com.atif.jobportal.job;
 
+import com.atif.jobportal.entity.User;
 import jakarta.persistence.*;
 
 @Entity
@@ -20,6 +21,10 @@ public class Job {
 
     private Integer experience;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recruiter_id")
+    private User recruiter;
+
     public Job() {
     }
 
@@ -36,6 +41,7 @@ public class Job {
         this.salary = salary;
         this.experience = experience;
     }
+
 
     public Long getId() {
         return id;
@@ -83,5 +89,13 @@ public class Job {
 
     public void setExperience(Integer experience) {
         this.experience = experience;
+    }
+
+    public User getRecruiter() {
+        return recruiter;
+    }
+
+    public void setRecruiter(User recruiter) {
+        this.recruiter = recruiter;
     }
 }

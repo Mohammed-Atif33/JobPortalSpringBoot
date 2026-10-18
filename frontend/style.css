@@ -1,0 +1,316 @@
+
+/* General reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7fb;
+    color: #263238;
+    line-height: 1.6;
+}
+
+/* Navigation bar */
+.navbar {
+    background-color: #142b4a;
+    color: white;
+    padding: 18px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.navbar h1 {
+    font-size: 26px;
+}
+
+.navbar nav {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar a:hover {
+    color: #7dd3fc;
+}
+
+/* Hero section */
+.hero {
+    min-height: 320px;
+    padding: 70px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+}
+
+.hero h2 {
+    font-size: 38px;
+    margin-bottom: 12px;
+    color: #142b4a;
+}
+
+.hero p {
+    margin-bottom: 25px;
+    color: #526477;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background-color: #1d4ed8;
+}
+
+/* Jobs section */
+.jobs-section {
+    padding: 45px 8%;
+}
+
+.jobs-section h2,
+.auth-section h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #142b4a;
+}
+
+.job-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.job-card {
+    background-color: white;
+    padding: 22px;
+    border-radius: 10px;
+    border: 1px solid #e0e7ef;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.job-card h3 {
+    color: #1d4ed8;
+    margin-bottom: 10px;
+}
+
+.job-card p {
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+}
+
+.job-card .btn {
+    margin-top: 12px;
+}
+
+/* Login and registration */
+.auth-section {
+    max-width: 460px;
+    margin: 35px auto;
+    padding: 28px;
+    background-color: white;
+    border: 1px solid #e0e7ef;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.auth-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.auth-section input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.auth-section input:focus {
+    outline: 2px solid #93c5fd;
+    border-color: #2563eb;
+}
+
+.message {
+    margin-top: 15px;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Footer */
+footer {
+    margin-top: 40px;
+    padding: 22px;
+    text-align: center;
+    background-color: #142b4a;
+    color: white;
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+    .navbar {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .navbar nav {
+        justify-content: center;
+        gap: 14px;
+    }
+
+    .hero h2 {
+        font-size: 30px;
+    }
+
+    .jobs-section {
+        padding: 35px 5%;
+    }
+}
+
+/* Home page */
+.hero-content {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-block;
+    padding: 12px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-secondary {
+    background: white;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+}
+
+.home-features {
+    max-width: 1100px;
+    margin: 50px auto;
+    padding: 0 24px;
+    text-align: center;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 28px;
+    text-align: left;
+}
+
+.feature-card {
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+}
+
+.feature-card a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.nav-register {
+    font-weight: 700;
+}
+
+.jobs-section {
+    max-width: 1100px;
+    margin: 48px auto;
+    padding: 0 24px;
+}
+
+#login-message,
+#register-message {
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+/* Responsive layout */
+@media (max-width: 700px) {
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-buttons {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hero-buttons a {
+        text-align: center;
+    }
+
+    .navbar {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+}
+
+.form-message {
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.form-message.success {
+    color: #15803d;
+}
+
+.form-message.error {
+    color: #b91c1c;
+}
+
+.form-message.info {
+    color: #1d4ed8;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

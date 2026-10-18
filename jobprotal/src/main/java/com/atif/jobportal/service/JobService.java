@@ -2,27 +2,41 @@ package com.atif.jobportal.service;
 
 import com.atif.jobportal.dto.JobRequestDTO;
 import com.atif.jobportal.dto.JobResponseDTO;
+import com.atif.jobportal.entity.User;
 import com.atif.jobportal.exception.JobNotFoundException;
 import com.atif.jobportal.job.Job;
 import com.atif.jobportal.repository.JobRepository;
+import com.atif.jobportal.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import com.atif.jobportal.repository.ApplicationRepository;
 
 @Service
 public class JobService {
 
     private final JobRepository jobRepository;
+    private final UserRepository userRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public JobService(JobRepository jobRepository) {
+    public JobService(
+            JobRepository jobRepository,
+            UserRepository userRepository, ApplicationRepository applicationRepository) {
         this.jobRepository = jobRepository;
+        this.userRepository = userRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     public JobResponseDTO createJob(JobRequestDTO request) {
 
-        Job job = new Job();
+        User recruiter = getCurrentRecruiter();
 
+        Job job = new Job();
         updateJobFields(job, request);
+        job.setRecruiter(recruiter);
 
         Job savedJob = jobRepository.save(job);
 
@@ -32,6 +46,16 @@ public class JobService {
     public List<JobResponseDTO> getAllJobs() {
 
         return jobRepository.findAll()
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
+    }
+
+    public List<JobResponseDTO> getMyJobs() {
+
+        User recruiter = getCurrentRecruiter();
+
+        return jobRepository.findByRecruiterId(recruiter.getId())
                 .stream()
                 .map(this::convertToResponseDTO)
                 .toList();
@@ -48,7 +72,10 @@ public class JobService {
             Long id,
             JobRequestDTO request) {
 
+        User recruiter = getCurrentRecruiter();
         Job job = findJobById(id);
+
+        verifyOwnership(job, recruiter);
 
         updateJobFields(job, request);
 
@@ -59,9 +86,58 @@ public class JobService {
 
     public void deleteJob(Long id) {
 
+        User recruiter = getCurrentRecruiter();
         Job job = findJobById(id);
 
+        verifyOwnership(job, recruiter);
+
+        Long jobId = job.getId();
+        long applicationCount = applicationRepository.countByJobId(jobId);
+
+        if (applicationCount > 0) {
+            throw new IllegalStateException(
+                    "Cannot delete this job because " + applicationCount
+                            + " application(s) are linked to it."
+            );
+        }
+
         jobRepository.delete(job);
+    }
+
+    private User getCurrentRecruiter() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            throw new AccessDeniedException(
+                    "Authentication is required");
+        }
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new AccessDeniedException(
+                                "Authenticated user not found"));
+
+        if (!"RECRUITER".equals(user.getRole())) {
+            throw new AccessDeniedException(
+                    "Only recruiters can manage jobs");
+        }
+
+        return user;
+    }
+
+    private void verifyOwnership(Job job, User recruiter) {
+
+        if (job.getRecruiter() == null
+                || !job.getRecruiter().getId().equals(recruiter.getId())) {
+            throw new AccessDeniedException(
+                    "You can only manage your own jobs");
+        }
     }
 
     private Job findJobById(Long id) {
