@@ -2,6 +2,8 @@ package com.atif.jobportal.dto;
 
 public class ApplicationResponseDTO {
 
+    private String applicantEmail;
+    private String applicantName;
     private Long id;
     private Long userId;
     private Long jobId;
@@ -14,12 +16,16 @@ public class ApplicationResponseDTO {
             Long id,
             Long userId,
             Long jobId,
-            String status) {
+            String status,
+            String applicantName,
+            String applicantEmail) {
 
         this.id = id;
         this.userId = userId;
         this.jobId = jobId;
         this.status = status;
+        this.applicantName = applicantName;
+        this.applicantEmail = applicantEmail;
     }
 
     public Long getId() {
@@ -53,4 +59,13 @@ public class ApplicationResponseDTO {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String getApplicantName() {
+        return applicantName;
+    }
+
+    public String getApplicantEmail() {
+        return applicantEmail;
+    }
+
 }

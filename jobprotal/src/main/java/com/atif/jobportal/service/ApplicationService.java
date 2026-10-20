@@ -146,7 +146,9 @@ public class ApplicationService {
                 application.getId(),
                 application.getUser().getId(),
                 application.getJob().getId(),
-                application.getStatus().name()
+                application.getStatus().name(),
+                application.getUser().getName(),
+                application.getUser().getEmail()
         );
     }
 }
