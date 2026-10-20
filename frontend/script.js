@@ -613,6 +613,107 @@ if (dashboardLogoutButton) {
     dashboardLogoutButton.addEventListener("click", logout);
 }
 
+document.getElementById("loadApplicationsBtn")?.addEventListener("click", async () => {
+    const token = sessionStorage.getItem("jwtToken");
+    const applicationsList = document.getElementById("applicationsList");
+    const message = document.getElementById("applicationsMessage");
+
+    applicationsList.innerHTML = "";
+    message.textContent = "Loading applications...";
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/applications`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to load applications (${response.status})`);
+        }
+
+        const applications = await response.json();
+
+        if (applications.length === 0) {
+            message.textContent = "No applications found.";
+            return;
+        }
+
+        message.textContent = `${applications.length} application(s) found.`;
+
+        applications.forEach(application => {
+            const card = document.createElement("div");
+            card.className = "application-card";
+
+            const heading = document.createElement("h3");
+            heading.textContent = `Application #${application.id}`;
+
+            const details = document.createElement("p");
+            details.textContent =
+                `Job ID: ${application.jobId} | Applicant User ID: ${application.userId}`;
+
+            const label = document.createElement("label");
+            label.textContent = "Application status: ";
+
+            const select = document.createElement("select");
+
+            ["APPLIED", "SHORTLISTED", "REJECTED", "SELECTED"].forEach(value => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = value;
+                select.appendChild(option);
+            });
+
+            select.value = application.status;
+
+            const updateButton = document.createElement("button");
+            updateButton.type = "button";
+            updateButton.textContent = "Update Status";
+
+            const resultMessage = document.createElement("p");
+
+            updateButton.addEventListener("click", async () => {
+                updateButton.disabled = true;
+                resultMessage.textContent = "Updating...";
+
+                try {
+                    const response = await fetch(
+                        `${API_BASE_URL}/applications/${application.id}/status`,
+                        {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${sessionStorage.getItem("jwtToken")}`
+                            },
+                            body: JSON.stringify({ status: select.value })
+                        }
+                    );
+
+                    const result = await response.json().catch(() => null);
+
+                    if (!response.ok) {
+                        throw new Error(
+                            result?.message || `Update failed (${response.status})`
+                        );
+                    }
+
+                    resultMessage.textContent = "Status updated successfully!";
+                } catch (error) {
+                    resultMessage.textContent = error.message;
+                } finally {
+                    updateButton.disabled = false;
+                }
+            });
+
+            label.appendChild(select);
+            card.append(heading, details, label, updateButton, resultMessage);
+            applicationsList.appendChild(card);
+        });
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+
 // ==================== INITIALIZE ====================
 
 loadJobs();

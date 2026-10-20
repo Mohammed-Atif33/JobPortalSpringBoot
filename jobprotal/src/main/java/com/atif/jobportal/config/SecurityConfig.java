@@ -113,18 +113,34 @@ public class SecurityConfig {
                                 "/api/applications/*/status"
                         ).hasRole("RECRUITER")
 
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/applications")
+                        .hasRole("RECRUITER")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/applications/*")
+                        .hasRole("RECRUITER")
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(
-                                (request, response, authException) ->
+                                (request,
+                                 response,
+                                 authException)
+                                        ->
                                         response.sendError(
                                                 HttpServletResponse.SC_UNAUTHORIZED,
                                                 "Authentication required or token is invalid"
                                         )
                         )
                         .accessDeniedHandler(
-                                (request, response, accessDeniedException) ->
+                                (request,
+                                 response,
+                                 accessDeniedException)
+                                        ->
                                         response.sendError(
                                                 HttpServletResponse.SC_FORBIDDEN,
                                                 "You do not have permission to access this resource"

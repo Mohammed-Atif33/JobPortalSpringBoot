@@ -84,9 +84,34 @@ public class ApplicationService {
         return convertToResponseDTO(application);
     }
 
+    public List<ApplicationResponseDTO> getApplicationsForRecruiter(
+            String email) {
+
+        User recruiter = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Recruiter not found with email: " + email
+                        )
+                );
+
+        return applicationRepository
+                .findByJobRecruiterId(recruiter.getId())
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
+    }
+
     public ApplicationResponseDTO updateApplicationStatus(
             Long id,
-            ApplicationStatusRequestDTO request) {
+            ApplicationStatusRequestDTO request,
+            String email) {
+
+        User recruiter = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Recruiter not found with email: " + email
+                        )
+                );
 
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() ->
@@ -95,7 +120,18 @@ public class ApplicationService {
                         )
                 );
 
-        application.setStatus(request.getStatus());
+        if (application.getJob().getRecruiter() == null
+                || !application.getJob().getRecruiter().getId()
+                .equals(recruiter.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "You can only update applications for your own jobs."
+            );
+        }
+
+        application.setStatus(
+                request.getStatus()
+        );
 
         Application updatedApplication =
                 applicationRepository.save(application);
