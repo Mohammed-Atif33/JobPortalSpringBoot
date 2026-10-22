@@ -9,4 +9,6 @@ public interface ApplicationRepository
 
     long countByJobId(Long jobId);
     List<Application> findByJobRecruiterId(Long recruiterId);
+    List<Application> findByUserId(Long userId);
+    boolean existsByUserIdAndJobId(Long userId, Long jobId);
 }

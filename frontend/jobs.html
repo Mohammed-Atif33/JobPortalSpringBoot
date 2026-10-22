@@ -1,35 +1,58 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102a43">
     <title>Find Jobs | JobPortal</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
+
 <body>
     <nav class="navbar">
-        <a class="logo" href="index.html">JobPortal</a>
-        <div class="nav-links">
-            <a href="index.html">Home |</a>
-            <a href="jobs.html">Find Jobs |</a>
-            <a href="login.html">Login |</a>
-            <a href="register.html">Register</a>
-        </div>
+        <a class="nav-logo" href="index.html" aria-label="JobPortal home"><span
+                class="brand-mark">J</span><span>JobPortal</span></a>
+        <div class="nav-links"><a href="index.html">Home</a><a class="active" href="jobs.html">Find Jobs</a><a
+                href="login.html">Login</a><a href="register.html" class="nav-cta">Create account</a></div>
     </nav>
 
-    <main class="jobs-section">
-        <h1>Find Your Next Opportunity</h1>
-        <p>Explore jobs and take the next step in your career.</p>
-
-        <div id="job-list" class="job-list">
-            <p>Loading jobs...</p>
-        </div>
+    <main class="page-shell jobs-section">
+        <section class="page-intro"><span class="eyebrow">CAREER OPPORTUNITIES</span>
+            <h1>Find your next <span>opportunity.</span></h1>
+            <p>Explore available jobs and take the next step in your career.</p>
+        </section>
+        <section class="content-panel" aria-label="Available jobs">
+            <div class="panel-heading">
+                <div>
+                    <h2>Latest opportunities</h2>
+                    <p>Browse the roles currently available on JobPortal.</p>
+                </div><span class="panel-pill"><span class="status-dot"></span> Open positions</span>
+            </div>
+            <div id="job-list" class="job-list">
+                <div class="loading-state"><span class="loading-spinner"></span>
+                    <p>Loading jobs...</p>
+                </div>
+            </div>
+        </section>
+        <section id="my-applications-section" class="content-panel applications-panel" hidden>
+            <div class="panel-heading">
+                <div>
+                    <h2>My applications</h2>
+                    <p>Keep track of the opportunities you've applied for.</p>
+                </div><button type="button" id="loadMyApplicationsBtn" class="btn-primary btn-small">View my
+                    applications</button>
+            </div>
+            <p id="myApplicationsMessage" class="status-message" role="status" aria-live="polite"></p>
+            <div id="myApplicationsList" class="job-list"></div>
+        </section>
     </main>
 
-    <footer>
-        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p>
+    <footer class="site-footer"><a class="footer-brand" href="index.html"><span class="brand-mark">J</span>
+            JobPortal</a>
+        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p><a href="login.html">Sign in</a>
     </footer>
 </body>
+
 </html>

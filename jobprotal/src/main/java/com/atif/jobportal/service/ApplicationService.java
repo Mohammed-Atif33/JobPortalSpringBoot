@@ -13,10 +13,11 @@ import com.atif.jobportal.job.Job;
 import com.atif.jobportal.repository.ApplicationRepository;
 import com.atif.jobportal.repository.JobRepository;
 import com.atif.jobportal.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import com.atif.jobportal.entity.User;
 @Service
 public class ApplicationService {
 
@@ -52,6 +53,14 @@ public class ApplicationService {
                         )
                 );
 
+        if (applicationRepository.existsByUserIdAndJobId(
+                user.getId(), job.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "You have already applied for this job."
+            );
+        }
+
         Application application = new Application();
 
         application.setUser(user);
@@ -72,7 +81,14 @@ public class ApplicationService {
                 .toList();
     }
 
-    public ApplicationResponseDTO getApplicationById(Long id) {
+    public ApplicationResponseDTO getApplicationById(Long id, String email) {
+
+        User recruiter = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Recruiter not found with email: " + email
+                        )
+                );
 
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() ->
@@ -81,7 +97,32 @@ public class ApplicationService {
                         )
                 );
 
+        if (application.getJob().getRecruiter() == null
+                || !application.getJob().getRecruiter().getId()
+                .equals(recruiter.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can only view applications for your own jobs."
+            );
+        }
+
         return convertToResponseDTO(application);
+    }
+
+    public List<ApplicationResponseDTO> getApplicationsForJobSeeker(
+            String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: " + email
+                        )
+                );
+
+        return applicationRepository.findByUserId(user.getId())
+                .stream()
+                .map(this::convertToResponseDTO)
+                .toList();
     }
 
     public List<ApplicationResponseDTO> getApplicationsForRecruiter(
@@ -119,7 +160,6 @@ public class ApplicationService {
                                 "Application not found with id: " + id
                         )
                 );
-
         if (application.getJob().getRecruiter() == null
                 || !application.getJob().getRecruiter().getId()
                 .equals(recruiter.getId())) {

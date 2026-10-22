@@ -1,53 +1,54 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102a43">
     <title>Login | JobPortal</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
-<body>
-    <nav class="navbar">
-        <a class="logo" href="index.html">JobPortal</a>
-        <div class="nav-links">
-            <a href="index.html">Home |</a>
-            <a href="jobs.html">Find Jobs |</a>
-            <a href="register.html">Register</a>
-        </div>
+
+<body class="auth-page">
+    <nav class="navbar"><a class="nav-logo" href="index.html" aria-label="JobPortal home"><span
+                class="brand-mark">J</span><span>JobPortal</span></a>
+        <div class="nav-links"><a href="index.html">Home</a><a href="jobs.html">Find Jobs</a><a class="active"
+                href="login.html">Login</a><a href="register.html" class="nav-cta">Create account</a></div>
     </nav>
-
-    <main class="auth-section">
-        <div class="auth-card">
-            <h1>Welcome Back</h1>
-            <p>Log in to continue your job search.</p>
-
-            <form id="login-form">
-                <input
-                    type="email"
-                    id="login-email"
-                    placeholder="Email address"
-                    required
-                >
-                <input
-                    type="password"
-                    id="login-password"
-                    placeholder="Password"
-                    required
-                >
-                <button type="submit">Login</button>
-                <p id="login-message" role="status" aria-live="polite"></p>
-            </form>
-
-            <p>Don't have an account?
-                <a href="register.html">Create an account</a>
-            </p>
-        </div>
+    <main class="auth-layout">
+        <aside class="auth-aside"><span class="eyebrow eyebrow-light">WELCOME BACK</span>
+            <h1>Your next opportunity is closer than you think.</h1>
+            <p>Sign in to continue your job search and keep moving toward your career goals.</p>
+            <div class="aside-feature"><span class="aside-check">✓</span><span>Explore opportunities in one place</span>
+            </div>
+            <div class="aside-feature"><span class="aside-check">✓</span><span>Manage your job search with ease</span>
+            </div>
+            <div class="aside-decoration">J</div>
+        </aside>
+        <section class="auth-section">
+            <div class="auth-card">
+                <div class="auth-heading"><span class="auth-icon">↗</span>
+                    <h2>Welcome back</h2>
+                    <p>Enter your details to sign in to your account.</p>
+                </div>
+                <form id="login-form" class="form-stack">
+                    <label for="login-email">Email address</label><input type="email" id="login-email" name="email"
+                        placeholder="you@example.com" autocomplete="email" required>
+                    <label for="login-password">Password</label><input type="password" id="login-password"
+                        name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                    <button type="submit" class="btn-primary btn-full">Sign in <span
+                            aria-hidden="true">→</span></button>
+                    <p id="login-message" class="form-message" role="status" aria-live="polite"></p>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="register.html">Create an account</a></p>
+            </div>
+        </section>
     </main>
-
-    <footer>
-        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p>
+    <footer class="site-footer"><a class="footer-brand" href="index.html"><span class="brand-mark">J</span>
+            JobPortal</a>
+        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p><a href="jobs.html">Browse jobs</a>
     </footer>
 </body>
+
 </html>

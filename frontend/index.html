@@ -1,70 +1,108 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102a43">
     <title>Home | JobPortal</title>
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
-<body>
-    <nav class="navbar">
-    <div class="nav-logo">JobPortal</div>
 
-    <div class="nav-links">
-        <a href="index.html">Home |</a>
-        <a href="jobs.html">Find Jobs | </a>
-        <a href="login.html" id="login-link">Login |</a>
-        <a href="register.html" id="register-link">Register</a>
-    </div>
-</nav>
+<body>
+
+    <nav class="navbar">
+
+        <a class="nav-logo" href="index.html" aria-label="JobPortal home"><span
+                class="brand-mark">J</span><span>JobPortal</span></a>
+
+        <div class="nav-links">
+            <a class="active" href="index.html">Home</a>
+            <a href="jobs.html">Find Jobs</a>
+            <a href="login.html" id="login-link">Login</a>
+            <a href="register.html" id="register-link" class="nav-cta">Create account</a>
+
+        </div>
+    </nav>
 
     <main>
+
         <section class="hero">
+
             <div class="hero-content">
-                <h1>Find the Job That Fits Your Future</h1>
-                <p>
-                    Discover opportunities, connect with employers,
-                    and take the next step in your career.
-                </p>
+                <span class="eyebrow"><span class="eyebrow-dot"></span> Your next chapter starts here</span>
+                <h1>Find work that moves <span>you forward.</span></h1>
+                <p>Discover meaningful opportunities, connect with employers, and take the next step in your career with
+                    confidence.</p>
 
                 <div class="hero-buttons">
-                    <a href="jobs.html" class="btn-primary">Explore Jobs</a>
-                    <a href="register.html" class="btn-secondary">Create Account</a>
+
+                    <a href="jobs.html" class="btn-primary">Explore jobs <span aria-hidden="true">→</span></a>
+                    <a href="register.html" class="btn-secondary">Create an account</a>
+
                 </div>
+                <div class="hero-trust"><span class="trust-check">✓</span> Simple applications <span
+                        class="trust-separator">•</span> Opportunities in one place</div>
+            </div>
+            <div class="hero-visual" aria-hidden="true">
+                <div class="visual-orbit orbit-one"></div>
+                <div class="visual-orbit orbit-two"></div>
+                <div class="visual-card main-visual-card">
+                    <div class="visual-card-top"><span class="visual-icon">✦</span><span class="visual-status">Career
+                            opportunities</span></div>
+                    <div class="visual-line visual-line-long"></div>
+                    <div class="visual-line visual-line-medium"></div>
+                    <div class="visual-tags"><span>Technology</span><span>Engineering</span></div>
+                    <div class="visual-card-footer"><span class="mini-avatar">JP</span><span>Find your next
+                            role</span><span class="visual-arrow">↗</span></div>
+                </div>
+                <div class="floating-note"><span class="floating-note-icon">✓</span><span><strong>Ready for your next
+                            step?</strong><small>Start exploring today</small></span></div>
+                <div class="floating-bubble">J</div>
             </div>
         </section>
 
-        <section class="home-features">
-            <h2>Your Career Starts Here</h2>
-
+        <section class="home-features section-shell">
+            <div class="section-heading">
+                <span class="eyebrow">HOW JOBPORTAL HELPS</span>
+                <h2>Your career, <span>your next move.</span></h2>
+                <p>Everything you need to move from searching to applying.</p>
+            </div>
             <div class="feature-grid">
                 <article class="feature-card">
-                    <h3>Discover Jobs</h3>
-                    <p>Explore available opportunities that match your interests.</p>
-                    <a href="jobs.html">Browse Jobs →</a>
+                    <div class="feature-icon icon-blue">⌕</div>
+                    <h3>Discover opportunities</h3>
+                    <p>Explore available roles and find opportunities that match your interests.</p><a
+                        href="jobs.html">Browse jobs <span aria-hidden="true">→</span></a>
                 </article>
-
                 <article class="feature-card">
-                    <h3>Create Your Account</h3>
-                    <p>Register to start applying for opportunities.</p>
-                    <a href="register.html">Register Now →</a>
+                    <div class="feature-icon icon-indigo">＋</div>
+                    <h3>Create your profile</h3>
+                    <p>Set up your account and get ready to apply for your next opportunity.</p><a
+                        href="register.html">Register now <span aria-hidden="true">→</span></a>
                 </article>
-
                 <article class="feature-card">
-                    <h3>Track Your Journey</h3>
-                    <p>Take the next step toward your career goals.</p>
-                    <a href="login.html">Login →</a>
+                    <div class="feature-icon icon-sky">↗</div>
+                    <h3>Move forward</h3>
+                    <p>Keep your job search moving and take the next step toward your goals.</p><a
+                        href="login.html">Sign in <span aria-hidden="true">→</span></a>
                 </article>
             </div>
+        </section>
+
+        <section class="home-cta section-shell">
+            <div><span class="eyebrow eyebrow-light">YOUR NEXT OPPORTUNITY IS OUT THERE</span>
+                <h2>Make your next move count.</h2>
+                <p>Explore jobs and start building what comes next.</p>
+            </div><a href="jobs.html" class="btn-light">Find a job <span aria-hidden="true">→</span></a>
         </section>
     </main>
 
-    <!-- <footer>
-        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p>
-    </footer> -->
-
-    <script src="script.js"></script>
-
+    <footer class="site-footer"><a class="footer-brand" href="index.html"><span class="brand-mark">J</span>
+            JobPortal</a>
+        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p><a href="jobs.html">Explore opportunities</a>
+    </footer>
 </body>
+
 </html>

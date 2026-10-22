@@ -10,11 +10,16 @@ function showMessage(elementId, message, type = "error") {
 }
 
 async function readResponse(response) {
-    return response.json().catch(() => ({}));
+    const data = await response.json().catch(() => ({}));
+    if (data.detail && !data.message) {
+        data.message = data.detail;
+    }
+    return data;
 }
 
 function logout() {
     sessionStorage.removeItem("jwtToken");
+    sessionStorage.removeItem("userRole");
     window.location.href = "index.html";
 }
 
@@ -117,6 +122,7 @@ if (loginForm) {
             const role = String(data.role || "")
                 .replace(/^ROLE_/, "")
                 .toUpperCase();
+            sessionStorage.setItem("userRole", role);
 
             window.location.href = role === "RECRUITER"
                 ? "recruiter-dashboard.html"
@@ -209,6 +215,7 @@ async function applyForJob(jobId) {
 
         if (response.status === 401) {
             sessionStorage.removeItem("jwtToken");
+                    sessionStorage.removeItem("userRole");
             alert("Your session has expired. Please log in again.");
             window.location.href = "login.html";
             return;
@@ -618,7 +625,7 @@ document.getElementById("loadApplicationsBtn")?.addEventListener("click", async 
     const applicationsList = document.getElementById("applicationsList");
     const message = document.getElementById("applicationsMessage");
 
-    applicationsList.innerHTML = "";
+    applicationsList.replaceChildren();
     message.textContent = "Loading applications...";
 
     try {
@@ -650,7 +657,11 @@ document.getElementById("loadApplicationsBtn")?.addEventListener("click", async 
 
             const details = document.createElement("p");
             details.textContent =
-                `Job ID: ${application.jobId} | Applicant User ID: ${application.userId}`;
+                `Job ID: ${application.jobId} | Applicant ID: ${application.userId}`;
+
+            const applicantInfo = document.createElement("p");
+            applicantInfo.textContent =
+                `Name: ${application.applicantName || "Not available"} | Email: ${application.applicantEmail || "Not available"}`;
 
             const label = document.createElement("label");
             label.textContent = "Application status: ";
@@ -706,11 +717,74 @@ document.getElementById("loadApplicationsBtn")?.addEventListener("click", async 
             });
 
             label.appendChild(select);
-            card.append(heading, details, label, updateButton, resultMessage);
+            card.append(
+                heading,
+                details,
+                applicantInfo,
+                label,
+                updateButton,
+                resultMessage
+            );
             applicationsList.appendChild(card);
         });
     } catch (error) {
         message.textContent = error.message;
+    }
+});
+
+const myApplicationsSection = document.getElementById("my-applications-section");
+if (myApplicationsSection && sessionStorage.getItem("userRole") === "JOB_SEEKER") {
+    myApplicationsSection.hidden = false;
+}
+
+document.getElementById("loadMyApplicationsBtn")?.addEventListener("click", async () => {
+    const token = sessionStorage.getItem("jwtToken");
+    const message = document.getElementById("myApplicationsMessage");
+    const list = document.getElementById("myApplicationsList");
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    list.replaceChildren();
+    message.textContent = "Loading your applications...";
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/applications/my`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const applications = await readResponse(response);
+
+        if (response.status === 401) {
+            sessionStorage.removeItem("jwtToken");
+            sessionStorage.removeItem("userRole");
+            window.location.href = "login.html";
+            return;
+        }
+
+        if (!response.ok) {
+            message.textContent = applications.message || "Unable to load your applications.";
+            return;
+        }
+
+        if (!Array.isArray(applications) || applications.length === 0) {
+            message.textContent = "You have not applied to any jobs yet.";
+            return;
+        }
+
+        message.textContent = `${applications.length} application(s)`;
+        applications.forEach((application) => {
+            const card = document.createElement("article");
+            card.className = "job-card";
+            const heading = document.createElement("h3");
+            heading.textContent = `Job #${application.jobId}`;
+            const status = document.createElement("p");
+            status.textContent = `Status: ${application.status}`;
+            card.append(heading, status);
+            list.appendChild(card);
+        });
+    } catch (error) {
+        message.textContent = "Unable to connect to the server.";
     }
 });
 

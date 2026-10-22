@@ -1,2 +1,7 @@
 .idea/
 *.iml
+
+# Local credentials and environment-specific Spring configuration
+.env
+**/application.properties
+**/application-local.properties

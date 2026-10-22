@@ -1,0 +1,9 @@
+{
+    "java.compile.nullAnalysis.mode": "disabled",
+    "[html]": {
+        "editor.wordWrap": "on"
+    },
+    "[css]": {
+        "editor.wordWrap": "on"
+    }
+}

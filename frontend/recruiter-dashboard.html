@@ -1,85 +1,86 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recruiter Dashboard | Job Portal</title>
+    <meta name="theme-color" content="#102a43">
+    <title>Recruiter Dashboard | JobPortal</title>
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
-<body>
 
-<header>
-    <h1>Recruiter Dashboard</h1>
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="jobs.html">Browse Jobs</a>
-        <button id="logoutBtn" type="button">Logout</button>
-    </nav>
-</header>
-
-<main class="dashboard-container">
-    <section class="dashboard-heading">
-        <h2>Manage Your Jobs</h2>
-        <p>View and manage the jobs you have posted.</p>
-    </section>
-
-    <section class="dashboard-summary">
-        <div class="dashboard-card">
-            <h3>Total Jobs Posted</h3>
-            <p id="totalJobs">0</p>
-        </div>
-    </section>
-
-    <section class="dashboard-actions">
-        <h2>Post a New Job</h2>
-
-        <form id="createJobForm">
-            <label for="title">Job Title</label>
-            <input type="text" id="title" name="title"
-                   placeholder="e.g. Java Backend Developer" required>
-
-            <label for="description">Job Description</label>
-            <textarea id="description" name="description"
-                      placeholder="Describe the job responsibilities"
-                      required></textarea>
-
-            <label for="location">Location</label>
-            <input type="text" id="location" name="location"
-                   placeholder="e.g. Pune" required>
-
-            <label for="salary">Salary</label>
-            <input type="number" id="salary" name="salary"
-                   min="0" step="0.01" placeholder="e.g. 500000" required>
-
-            <label for="experience">Experience (years)</label>
-            <input type="number" id="experience" name="experience"
-                   min="0" step="1" placeholder="e.g. 2" required>
-
-            <button type="submit">Create Job</button>
-            <p id="formMessage" role="status"></p>
-        </form>
-    </section>
-
-    <section class="applicants-section">
-        <h2>Manage Applications</h2>
-
-        <p id="applicationsMessage"></p>
-
-        <button type="button" id="loadApplicationsBtn">
-            View Applicants
-        </button>
-
-        <div id="applicationsList"></div>
-    </section>
-
-    <section class="my-jobs-section">
-        <h2>My Posted Jobs</h2>
-        <p id="jobsMessage" role="status">Loading your jobs...</p>
-        <div id="myJobsList"></div>
-    </section>
-</main>
-
-<script src="script.js"></script>
+<body class="dashboard-page">
+    <header class="dashboard-topbar"><a class="nav-logo" href="index.html"><span
+                class="brand-mark">J</span><span>JobPortal</span></a>
+        <nav class="dashboard-nav"><a href="index.html">Home</a><a href="jobs.html">Browse jobs</a><button
+                id="logoutBtn" type="button" class="btn-outline-light">Logout</button></nav>
+    </header>
+    <main class="dashboard-container">
+        <section class="dashboard-heading">
+            <div><span class="eyebrow">RECRUITER WORKSPACE</span>
+                <h1>Your hiring <span>dashboard.</span></h1>
+                <p>Manage your job listings and review candidates in one place.</p>
+            </div><a href="#create-job" class="btn-primary">＋ Post a job</a>
+        </section>
+        <section class="dashboard-summary">
+            <div class="dashboard-card summary-card">
+                <div class="summary-icon">▤</div>
+                <div>
+                    <p class="summary-label">Total jobs posted</p>
+                    <p id="totalJobs" class="summary-number">0</p>
+                </div><span class="summary-caption">Your listings</span>
+            </div>
+        </section>
+        <section id="create-job" class="dashboard-panel dashboard-actions">
+            <div class="panel-heading">
+                <div><span class="eyebrow">NEW LISTING</span>
+                    <h2>Post a new job</h2>
+                    <p>Share the details candidates need to know.</p>
+                </div><span class="panel-icon">＋</span>
+            </div>
+            <form id="createJobForm" class="form-grid">
+                <div class="field-group field-span-two"><label for="title">Job title</label><input type="text"
+                        id="title" name="title" placeholder="e.g. Java Backend Developer" required></div>
+                <div class="field-group field-span-two"><label for="description">Job description</label><textarea
+                        id="description" name="description" rows="4"
+                        placeholder="Describe the role and responsibilities" required></textarea></div>
+                <div class="field-group"><label for="location">Location</label><input type="text" id="location"
+                        name="location" placeholder="e.g. Pune or Remote" required></div>
+                <div class="field-group"><label for="salary">Salary (annual)</label><input type="number" id="salary"
+                        name="salary" min="0" step="0.01" placeholder="e.g. 500000" required></div>
+                <div class="field-group"><label for="experience">Experience (years)</label><input type="number"
+                        id="experience" name="experience" min="0" step="1" placeholder="e.g. 2" required></div>
+                <div class="field-group field-submit"><button type="submit" class="btn-primary">Publish job <span
+                            aria-hidden="true">→</span></button></div>
+                <p id="formMessage" class="form-message field-span-two" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+        <section class="dashboard-panel applicants-section">
+            <div class="panel-heading">
+                <div><span class="eyebrow">CANDIDATE PIPELINE</span>
+                    <h2>Manage applications</h2>
+                    <p>Review applicants for your posted jobs and update their status.</p>
+                </div><button type="button" id="loadApplicationsBtn" class="btn-secondary">View applicants</button>
+            </div>
+            <p id="applicationsMessage" class="status-message" role="status" aria-live="polite"></p>
+            <div id="applicationsList"></div>
+        </section>
+        <section class="dashboard-panel my-jobs-section">
+            <div class="panel-heading">
+                <div><span class="eyebrow">YOUR LISTINGS</span>
+                    <h2>My posted jobs</h2>
+                    <p>View and manage the jobs you've published.</p>
+                </div>
+            </div>
+            <p id="jobsMessage" class="status-message" role="status" aria-live="polite">Loading your jobs...</p>
+            <div id="myJobsList"></div>
+        </section>
+    </main>
+    <footer class="site-footer"><a class="footer-brand" href="index.html"><span class="brand-mark">J</span>
+            JobPortal</a>
+        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p><a href="jobs.html">Browse jobs</a>
+    </footer>
 </body>
+
 </html>

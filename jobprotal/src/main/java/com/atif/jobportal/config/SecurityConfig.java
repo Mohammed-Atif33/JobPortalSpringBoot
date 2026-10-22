@@ -43,11 +43,11 @@ public class SecurityConfig {
         return provider;
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            AuthenticationProvider authenticationProvider,
-            JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+        @Bean  
+        public SecurityFilterChain securityFilterChain(
+                HttpSecurity http,
+                AuthenticationProvider authenticationProvider,
+                JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
         http
                 .cors(cors ->
@@ -58,6 +58,7 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public authentication and registration
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/auth/login"
@@ -68,6 +69,12 @@ public class SecurityConfig {
                                 "/api/users"
                         ).permitAll()
 
+                        // Block user-list and user-detail endpoints
+                        .requestMatchers(
+                                "/api/users",
+                                "/api/users/**"
+                        ).denyAll()
+
                         // Public job listings and job details
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -75,6 +82,7 @@ public class SecurityConfig {
                                 "/api/jobs/"
                         ).permitAll()
 
+                        // Recruiter-only: view own jobs
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/jobs/my"
@@ -107,7 +115,12 @@ public class SecurityConfig {
                                 "/api/applications"
                         ).hasRole("JOB_SEEKER")
 
-                        // Recruiter application-status updates
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/applications/my"
+                        ).hasRole("JOB_SEEKER")
+
+                        // Recruiter application management
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/applications/*/status"
@@ -115,32 +128,30 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/applications")
-                        .hasRole("RECRUITER")
+                                "/api/applications"
+                        ).hasRole("RECRUITER")
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/applications/*")
-                        .hasRole("RECRUITER")
+                                "/api/applications/*"
+                        ).hasRole("RECRUITER")
 
+                        // Allow Spring Boot to return the original error response
+                        .requestMatchers("/error").permitAll()
+
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(
-                                (request,
-                                 response,
-                                 authException)
-                                        ->
+                                (request, response, authException) ->
                                         response.sendError(
                                                 HttpServletResponse.SC_UNAUTHORIZED,
                                                 "Authentication required or token is invalid"
                                         )
                         )
                         .accessDeniedHandler(
-                                (request,
-                                 response,
-                                 accessDeniedException)
-                                        ->
+                                (request, response, accessDeniedException) ->
                                         response.sendError(
                                                 HttpServletResponse.SC_FORBIDDEN,
                                                 "You do not have permission to access this resource"
@@ -156,7 +167,7 @@ public class SecurityConfig {
                 );
 
         return http.build();
-    }
+        }
 
     @Bean
     public AuthenticationManager authenticationManager(

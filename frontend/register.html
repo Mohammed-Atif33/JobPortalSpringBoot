@@ -1,59 +1,56 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102a43">
     <title>Register | JobPortal</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
-<body>
-    <nav class="navbar">
-        <a class="logo" href="index.html">JobPortal</a>
-        <div class="nav-links">
-            <a href="index.html">Home |</a>
-            <a href="jobs.html">Find Jobs |</a>
-            <a href="login.html">Login</a>
-        </div>
+
+<body class="auth-page">
+    <nav class="navbar"><a class="nav-logo" href="index.html" aria-label="JobPortal home"><span
+                class="brand-mark">J</span><span>JobPortal</span></a>
+        <div class="nav-links"><a href="index.html">Home</a><a href="jobs.html">Find Jobs</a><a
+                href="login.html">Login</a><a class="active nav-cta" href="register.html">Create account</a></div>
     </nav>
-
-    <main class="auth-section">
-        <div class="auth-card">
-            <h1>Create an Account</h1>
-            <p>Join JobPortal and find your next opportunity.</p>
-
-            <form id="register-form">
-                <input
-                    type="text"
-                    id="register-name"
-                    placeholder="Full name"
-                    required
-                >
-                <input
-                    type="email"
-                    id="register-email"
-                    placeholder="Email address"
-                    required
-                >
-                <input
-                    type="password"
-                    id="register-password"
-                    placeholder="Password"
-                    required
-                >
-                <button type="submit">Register</button>
-                <p id="register-message" role="status" aria-live="polite"></p>
-            </form>
-
-            <p>Already have an account?
-                <a href="login.html">Login here</a>
-            </p>
-        </div>
+    <main class="auth-layout register-layout">
+        <aside class="auth-aside"><span class="eyebrow eyebrow-light">START YOUR JOURNEY</span>
+            <h1>Build your future, one opportunity at a time.</h1>
+            <p>Create your account to discover roles and start applying for opportunities that fit your goals.</p>
+            <div class="aside-feature"><span class="aside-check">✓</span><span>Quick and straightforward
+                    registration</span></div>
+            <div class="aside-feature"><span class="aside-check">✓</span><span>Discover opportunities for your next
+                    step</span></div>
+            <div class="aside-decoration">J</div>
+        </aside>
+        <section class="auth-section">
+            <div class="auth-card">
+                <div class="auth-heading"><span class="auth-icon">＋</span>
+                    <h2>Create your account</h2>
+                    <p>Fill in your details to get started with JobPortal.</p>
+                </div>
+                <form id="register-form" class="form-stack">
+                    <label for="register-name">Full name</label><input type="text" id="register-name" name="name"
+                        placeholder="Enter your full name" autocomplete="name" required>
+                    <label for="register-email">Email address</label><input type="email" id="register-email"
+                        name="email" placeholder="you@example.com" autocomplete="email" required>
+                    <label for="register-password">Password</label><input type="password" id="register-password"
+                        name="password" placeholder="Create a password" autocomplete="new-password" required>
+                    <button type="submit" class="btn-primary btn-full">Create account <span
+                            aria-hidden="true">→</span></button>
+                    <p id="register-message" class="form-message" role="status" aria-live="polite"></p>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="login.html">Sign in</a></p>
+            </div>
+        </section>
     </main>
-
-    <footer>
-        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p>
+    <footer class="site-footer"><a class="footer-brand" href="index.html"><span class="brand-mark">J</span>
+            JobPortal</a>
+        <p>© 2026 JobPortal. Built with Java and Spring Boot.</p><a href="jobs.html">Browse jobs</a>
     </footer>
 </body>
+
 </html>

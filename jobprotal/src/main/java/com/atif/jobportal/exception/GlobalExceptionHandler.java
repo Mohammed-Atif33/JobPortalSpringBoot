@@ -1,9 +1,11 @@
 package com.atif.jobportal.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.core.AuthenticationException;
 
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
@@ -68,4 +70,22 @@ public class GlobalExceptionHandler {
                 errors
         );
     }
+
+        @ExceptionHandler(AuthenticationException.class)
+        @ResponseStatus(HttpStatus.UNAUTHORIZED)
+        public ErrorResponse handleAuthenticationFailure() {
+                return new ErrorResponse(
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Invalid email or password."
+                );
+        }
+
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        @ResponseStatus(HttpStatus.CONFLICT)
+        public ErrorResponse handleDataIntegrityViolation() {
+                return new ErrorResponse(
+                                HttpStatus.CONFLICT.value(),
+                                "The request conflicts with existing data."
+                );
+        }
 }

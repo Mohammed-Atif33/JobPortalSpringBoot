@@ -1,12 +1,12 @@
 package com.atif.jobportal;
 
-import com.atif.jobportal.entity.User;
+// import com.atif.jobportal.entity.User;
 //import com.atif.jobportal.repository.UserRepository;
-import com.atif.jobportal.service.UserService;
-import org.springframework.boot.CommandLineRunner;
+// import com.atif.jobportal.service.UserService;
+// import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
+// import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class JobprotalApplication {

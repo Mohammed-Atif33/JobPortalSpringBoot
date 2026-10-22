@@ -47,12 +47,22 @@ public class ApplicationController {
         );
     }
 
+    @GetMapping("/my")
+    public List<ApplicationResponseDTO> getMyApplications(
+            Authentication authentication) {
+        return applicationService.getApplicationsForJobSeeker(
+                authentication.getName()
+        );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponseDTO> getApplicationById(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication authentication) {
 
         ApplicationResponseDTO response =
-                applicationService.getApplicationById(id);
+                applicationService.getApplicationById(
+                        id, authentication.getName());
 
         return ResponseEntity.ok(response);
     }
@@ -60,7 +70,7 @@ public class ApplicationController {
     @PutMapping("/{id}/status")
     public ApplicationResponseDTO updateApplicationStatus(
             @PathVariable Long id,
-            @RequestBody ApplicationStatusRequestDTO request,
+            @Valid @RequestBody ApplicationStatusRequestDTO request,
             Authentication authentication) {
 
         return applicationService.updateApplicationStatus(
