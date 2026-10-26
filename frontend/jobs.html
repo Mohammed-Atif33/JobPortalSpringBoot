@@ -31,6 +31,18 @@
                     <p>Browse the roles currently available on CareerNest.</p>
                 </div><span class="panel-pill"><span class="status-dot"></span> Open positions</span>
             </div>
+            <form id="job-search-form" class="job-search-form" role="search">
+                <div class="field-group">
+                    <label for="job-search-input">Search jobs</label>
+                    <input id="job-search-input" name="search" type="search"
+                        placeholder="Job title, recruiter, or location" autocomplete="off">
+                </div>
+                <div class="job-search-actions">
+                    <button type="submit" class="btn-primary">Search</button>
+                    <button type="button" id="clear-job-search" class="btn-secondary">Clear</button>
+                </div>
+            </form>
+            <p id="job-search-message" class="status-message" role="status" aria-live="polite"></p>
             <div id="job-list" class="job-list">
                 <div class="loading-state"><span class="loading-spinner"></span>
                     <p>Loading jobs...</p>

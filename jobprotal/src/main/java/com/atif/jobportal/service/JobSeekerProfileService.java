@@ -2,6 +2,7 @@ package com.atif.jobportal.service;
 
 import com.atif.jobportal.dto.JobSeekerProfileRequestDTO;
 import com.atif.jobportal.dto.JobSeekerProfileResponseDTO;
+import com.atif.jobportal.dto.RecruiterCandidateProfileResponseDTO;
 import com.atif.jobportal.entity.JobSeekerProfile;
 import com.atif.jobportal.entity.ProfileEducation;
 import com.atif.jobportal.entity.ProfileExperience;
@@ -40,6 +41,51 @@ public class JobSeekerProfileService {
         return profileRepository.findByUserId(user.getId())
                 .map(profile -> toResponse(profile, true))
                 .orElseGet(() -> emptyProfile(user));
+    }
+
+    @Transactional(readOnly = true)
+    public RecruiterCandidateProfileResponseDTO getRecruiterProfile(
+            Long userId,
+            String fullName) {
+        return profileRepository.findByUserId(userId)
+                .map(profile -> new RecruiterCandidateProfileResponseDTO(
+                        true,
+                        profile.getUser().getName(),
+                        profile.getProfessionalSummary(),
+                        List.copyOf(profile.getSkills()),
+                        profile.getEducation().stream()
+                                .map(entry ->
+                                        new RecruiterCandidateProfileResponseDTO.Education(
+                                                entry.getInstitution(),
+                                                entry.getQualification(),
+                                                entry.getFieldOfStudy(),
+                                                entry.getStartDate(),
+                                                entry.getEndDate()))
+                                .toList(),
+                        profile.getExperience().stream()
+                                .map(entry ->
+                                        new RecruiterCandidateProfileResponseDTO.Experience(
+                                                entry.getEmployer(),
+                                                entry.getJobTitle(),
+                                                entry.getDescription(),
+                                                entry.getStartDate(),
+                                                entry.getEndDate()))
+                                .toList(),
+                        profile.getProjects().stream()
+                                .map(entry ->
+                                        new RecruiterCandidateProfileResponseDTO.Project(
+                                                entry.getName(),
+                                                entry.getDescription(),
+                                                entry.getTechnologies()))
+                                .toList()))
+                .orElseGet(() -> new RecruiterCandidateProfileResponseDTO(
+                        false,
+                        fullName,
+                        "",
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of()));
     }
 
     @Transactional

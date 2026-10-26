@@ -3,6 +3,7 @@ package com.atif.jobportal.controller;
 import com.atif.jobportal.dto.ApplicationRequestDTO;
 import com.atif.jobportal.dto.ApplicationResponseDTO;
 import com.atif.jobportal.dto.ApplicationStatusRequestDTO;
+import com.atif.jobportal.dto.RecruiterCandidateProfileResponseDTO;
 import com.atif.jobportal.service.ApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -65,6 +66,15 @@ public class ApplicationController {
                         id, authentication.getName());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<RecruiterCandidateProfileResponseDTO> getCandidateProfile(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(applicationService.getCandidateProfile(
+                id,
+                authentication.getName()));
     }
 
     @PutMapping("/{id}/status")

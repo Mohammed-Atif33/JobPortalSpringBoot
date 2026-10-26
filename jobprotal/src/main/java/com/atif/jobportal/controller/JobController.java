@@ -32,9 +32,10 @@ public class JobController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JobResponseDTO>> getAllJobs() {
+    public ResponseEntity<List<JobResponseDTO>> getAllJobs(
+            @RequestParam(required = false) String search) {
 
-        List<JobResponseDTO> jobs = jobService.getAllJobs();
+        List<JobResponseDTO> jobs = jobService.getAllJobs(search);
 
         return ResponseEntity.ok(jobs);
     }

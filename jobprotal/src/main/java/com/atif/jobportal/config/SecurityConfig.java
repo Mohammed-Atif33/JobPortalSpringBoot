@@ -173,6 +173,11 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
+                                "/api/applications/*/profile"
+                        ).hasRole("RECRUITER")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/applications/*"
                         ).hasRole("RECRUITER")
 

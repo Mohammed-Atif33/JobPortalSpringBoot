@@ -218,7 +218,14 @@ async function loadJobs() {
     jobList.textContent = "Loading jobs...";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/jobs`);
+        const searchInput = document.getElementById("job-search-input");
+        const query = searchInput ? searchInput.value.trim() : "";
+        const searchMessage = document.getElementById("job-search-message");
+        if (searchMessage) searchMessage.textContent = "";
+        const url = new URL(`${API_BASE_URL}/jobs`);
+        if (query) url.searchParams.set("search", query);
+
+        const response = await fetch(url);
         const jobs = await readResponse(response);
 
         if (!response.ok) {
@@ -227,7 +234,9 @@ async function loadJobs() {
         }
 
         if (!Array.isArray(jobs) || jobs.length === 0) {
-            jobList.textContent = "No jobs are available right now.";
+            jobList.textContent = query
+                ? "No jobs match your search. Try a different title, recruiter, or location."
+                : "No jobs are available right now.";
             return;
         }
 
@@ -250,12 +259,20 @@ async function loadJobs() {
                 `Salary: ${job.salary ?? "Not specified"} | ` +
                 `Experience: ${job.experience ?? "Not specified"}`;
 
+            if (job.recruiterName) {
+                const company = document.createElement("p");
+                company.textContent = `Recruiter: ${job.recruiterName}`;
+                card.append(title, company, description, details);
+            } else {
+                card.append(title, description, details);
+            }
+
             const applyButton = document.createElement("button");
             applyButton.type = "button";
             applyButton.textContent = "Apply Now";
             applyButton.addEventListener("click", () => applyForJob(job.id));
 
-            card.append(title, description, details, applyButton);
+            card.appendChild(applyButton);
             jobList.appendChild(card);
         });
     } catch (error) {
@@ -263,6 +280,17 @@ async function loadJobs() {
         jobList.textContent = "Unable to connect to the server.";
     }
 }
+
+document.getElementById("job-search-form")?.addEventListener("submit", event => {
+    event.preventDefault();
+    loadJobs();
+});
+
+document.getElementById("clear-job-search")?.addEventListener("click", () => {
+    const searchInput = document.getElementById("job-search-input");
+    if (searchInput) searchInput.value = "";
+    loadJobs();
+});
 
 // ==================== APPLY FOR JOB ====================
 
@@ -699,11 +727,25 @@ if (dashboardLogoutButton) {
     dashboardLogoutButton.addEventListener("click", logout);
 }
 
+const applicationsList = document.getElementById("applicationsList");
+const candidateProfileView = document.getElementById("candidate-profile-view");
+const candidateProfileMessage = document.getElementById("candidate-profile-message");
+const candidateProfileContent = document.getElementById("candidate-profile-content");
+const backToApplicationsButton = document.getElementById("back-to-applications-button");
+
+if (backToApplicationsButton) {
+    backToApplicationsButton.addEventListener("click", () => {
+        candidateProfileView.hidden = true;
+        applicationsList.hidden = false;
+    });
+}
+
 document.getElementById("loadApplicationsBtn")?.addEventListener("click", async () => {
     const token = sessionStorage.getItem("jwtToken");
-    const applicationsList = document.getElementById("applicationsList");
     const message = document.getElementById("applicationsMessage");
 
+    candidateProfileView.hidden = true;
+    applicationsList.hidden = false;
     applicationsList.replaceChildren();
     message.textContent = "Loading applications...";
 
@@ -760,6 +802,162 @@ document.getElementById("loadApplicationsBtn")?.addEventListener("click", async 
             updateButton.type = "button";
             updateButton.textContent = "Update Status";
 
+            const viewProfileButton = document.createElement("button");
+            viewProfileButton.type = "button";
+            viewProfileButton.className = "candidate-profile-button";
+            viewProfileButton.textContent = "View Profile";
+            viewProfileButton.addEventListener("click", async () => {
+                applicationsList.hidden = true;
+                candidateProfileView.hidden = false;
+                candidateProfileContent.replaceChildren();
+                candidateProfileMessage.textContent = "Loading candidate profile...";
+                viewProfileButton.disabled = true;
+
+                const loading = document.createElement("div");
+                loading.className = "loading-state";
+                const spinner = document.createElement("span");
+                spinner.className = "loading-spinner";
+                spinner.setAttribute("aria-hidden", "true");
+                loading.appendChild(spinner);
+                candidateProfileContent.appendChild(loading);
+
+                try {
+                    const response = await fetch(
+                        `${API_BASE_URL}/applications/${application.id}/profile`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${sessionStorage.getItem("jwtToken")}`
+                            }
+                        }
+                    );
+                    const profile = await response.json().catch(() => null);
+                    if (!response.ok) {
+                        throw new Error(
+                            profile?.message
+                                || profile?.detail
+                                || `Unable to load candidate profile (${response.status}).`
+                        );
+                    }
+
+                    candidateProfileContent.replaceChildren();
+                    const name = document.createElement("h3");
+                    name.className = "candidate-profile-name";
+                    name.textContent = profile.fullName || application.applicantName || "Applicant";
+                    candidateProfileContent.appendChild(name);
+
+                    if (!profile.exists) {
+                        candidateProfileMessage.textContent =
+                            "This applicant has not created a profile yet.";
+                        return;
+                    }
+
+                    candidateProfileMessage.textContent = "";
+                    const appendSection = (title, entries, emptyText, renderEntry) => {
+                        const section = document.createElement("section");
+                        section.className = "candidate-profile-section";
+                        const heading = document.createElement("h4");
+                        heading.textContent = title;
+                        section.appendChild(heading);
+                        if (!entries.length) {
+                            const empty = document.createElement("p");
+                            empty.className = "candidate-profile-empty";
+                            empty.textContent = emptyText;
+                            section.appendChild(empty);
+                        } else {
+                            entries.forEach(entry => section.appendChild(renderEntry(entry)));
+                        }
+                        candidateProfileContent.appendChild(section);
+                    };
+                    const textBlock = (text, className = "") => {
+                        const paragraph = document.createElement("p");
+                        paragraph.className = className;
+                        paragraph.textContent = text;
+                        return paragraph;
+                    };
+                    const entryCard = () => {
+                        const article = document.createElement("article");
+                        article.className = "candidate-profile-card";
+                        return article;
+                    };
+                    const formatDates = entry =>
+                        [entry.startDate, entry.endDate].filter(Boolean).join(" – ");
+
+                    appendSection(
+                        "Professional Summary",
+                        profile.professionalSummary ? [profile.professionalSummary] : [],
+                        "No professional summary provided.",
+                        summary => textBlock(summary, "candidate-profile-summary")
+                    );
+                    appendSection(
+                        "Skills",
+                        profile.skills || [],
+                        "No skills added.",
+                        skill => {
+                            const chip = document.createElement("span");
+                            chip.className = "candidate-profile-skill";
+                            chip.textContent = skill;
+                            return chip;
+                        }
+                    );
+                    appendSection(
+                        "Education",
+                        profile.education || [],
+                        "No education details added.",
+                        entry => {
+                            const card = entryCard();
+                            const heading = document.createElement("h5");
+                            heading.textContent = entry.qualification || "Education";
+                            card.append(heading);
+                            if (entry.institution) card.appendChild(textBlock(entry.institution));
+                            if (entry.fieldOfStudy) card.appendChild(textBlock(entry.fieldOfStudy));
+                            const dates = formatDates(entry);
+                            if (dates) card.appendChild(textBlock(dates, "candidate-profile-meta"));
+                            return card;
+                        }
+                    );
+                    appendSection(
+                        "Work Experience",
+                        profile.experience || [],
+                        "No work experience or internships added.",
+                        entry => {
+                            const card = entryCard();
+                            const heading = document.createElement("h5");
+                            heading.textContent = entry.jobTitle || "Experience";
+                            card.append(heading);
+                            if (entry.employer) card.appendChild(textBlock(entry.employer));
+                            const dates = formatDates(entry);
+                            if (dates) card.appendChild(textBlock(dates, "candidate-profile-meta"));
+                            if (entry.description) card.appendChild(textBlock(entry.description));
+                            return card;
+                        }
+                    );
+                    appendSection(
+                        "Projects",
+                        profile.projects || [],
+                        "No projects added.",
+                        entry => {
+                            const card = entryCard();
+                            const heading = document.createElement("h5");
+                            heading.textContent = entry.name || "Project";
+                            card.append(heading);
+                            if (entry.description) card.appendChild(textBlock(entry.description));
+                            if (entry.technologies) {
+                                card.appendChild(textBlock(
+                                    `Technologies: ${entry.technologies}`,
+                                    "candidate-profile-meta"
+                                ));
+                            }
+                            return card;
+                        }
+                    );
+                } catch (error) {
+                    candidateProfileContent.replaceChildren();
+                    candidateProfileMessage.textContent = error.message;
+                } finally {
+                    viewProfileButton.disabled = false;
+                }
+            });
+
             const resultMessage = document.createElement("p");
 
             updateButton.addEventListener("click", async () => {
@@ -800,6 +998,7 @@ document.getElementById("loadApplicationsBtn")?.addEventListener("click", async 
                 heading,
                 details,
                 applicantInfo,
+                viewProfileButton,
                 label,
                 updateButton,
                 resultMessage

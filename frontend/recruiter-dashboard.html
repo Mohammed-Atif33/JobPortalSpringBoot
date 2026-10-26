@@ -65,6 +65,19 @@
             </div>
             <p id="applicationsMessage" class="status-message" role="status" aria-live="polite"></p>
             <div id="applicationsList"></div>
+            <section id="candidate-profile-view" class="candidate-profile-view" hidden
+                aria-labelledby="candidate-profile-heading" aria-live="polite">
+                <div class="candidate-profile-heading">
+                    <div>
+                        <span class="eyebrow">CANDIDATE PROFILE</span>
+                        <h3 id="candidate-profile-heading">Applicant profile</h3>
+                    </div>
+                    <button type="button" id="back-to-applications-button"
+                        class="btn-secondary">Back to applicants</button>
+                </div>
+                <p id="candidate-profile-message" class="status-message" role="status"></p>
+                <div id="candidate-profile-content" class="candidate-profile-content"></div>
+            </section>
         </section>
         <section class="dashboard-panel my-jobs-section">
             <div class="panel-heading">

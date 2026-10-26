@@ -4,6 +4,7 @@ import com.atif.jobportal.application.Application;
 import com.atif.jobportal.application.ApplicationStatus;
 import com.atif.jobportal.dto.ApplicationRequestDTO;
 import com.atif.jobportal.dto.ApplicationResponseDTO;
+import com.atif.jobportal.dto.RecruiterCandidateProfileResponseDTO;
 import com.atif.jobportal.entity.User;
 import com.atif.jobportal.job.Job;
 import com.atif.jobportal.repository.ApplicationRepository;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -36,6 +38,9 @@ class ApplicationServiceTest {
 
     @Mock
     private JobRepository jobRepository;
+
+    @Mock
+    private JobSeekerProfileService profileService;
 
     @InjectMocks
     private ApplicationService applicationService;
@@ -69,6 +74,7 @@ class ApplicationServiceTest {
     void preventsRecruiterFromReadingAnotherRecruitersApplication() {
         User recruiter = new User();
         recruiter.setId(20L);
+        recruiter.setRole("RECRUITER");
         User otherRecruiter = new User();
         otherRecruiter.setId(21L);
         Job job = new Job();
@@ -89,6 +95,125 @@ class ApplicationServiceTest {
         );
 
         assertEquals(403, exception.getStatusCode().value());
+    }
+
+    @Test
+    void recruiterCanReadProfileForTheirApplicant() {
+        User recruiter = new User();
+        recruiter.setId(20L);
+        recruiter.setRole("RECRUITER");
+        User applicant = new User(
+                "Job Seeker",
+                "seeker@example.com",
+                "encoded",
+                "JOB_SEEKER");
+        applicant.setId(7L);
+        Job job = new Job();
+        job.setId(12L);
+        job.setRecruiter(recruiter);
+        Application application = new Application(
+                applicant,
+                job,
+                ApplicationStatus.APPLIED);
+        RecruiterCandidateProfileResponseDTO expected =
+                new RecruiterCandidateProfileResponseDTO(
+                        true,
+                        "Job Seeker",
+                        "Backend developer",
+                        java.util.List.of("Java"),
+                        java.util.List.of(),
+                        java.util.List.of(),
+                        java.util.List.of());
+
+        when(userRepository.findByEmail("recruiter@example.com"))
+                .thenReturn(Optional.of(recruiter));
+        when(applicationRepository.findWithApplicantAndJobById(4L))
+                .thenReturn(Optional.of(application));
+        when(profileService.getRecruiterProfile(7L, "Job Seeker"))
+                .thenReturn(expected);
+
+        var response = applicationService.getCandidateProfile(
+                4L,
+                "recruiter@example.com");
+
+        assertEquals(expected, response);
+        verify(profileService).getRecruiterProfile(7L, "Job Seeker");
+    }
+
+    @Test
+    void preventsRecruiterFromReadingApplicantProfileForAnotherRecruitersJob() {
+        User recruiter = new User();
+        recruiter.setId(20L);
+        recruiter.setRole("RECRUITER");
+        User otherRecruiter = new User();
+        otherRecruiter.setId(21L);
+        User applicant = new User();
+        applicant.setId(7L);
+        Job job = new Job();
+        job.setRecruiter(otherRecruiter);
+        Application application = new Application(
+                applicant,
+                job,
+                ApplicationStatus.APPLIED);
+
+        when(userRepository.findByEmail("recruiter@example.com"))
+                .thenReturn(Optional.of(recruiter));
+        when(applicationRepository.findWithApplicantAndJobById(4L))
+                .thenReturn(Optional.of(application));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> applicationService.getCandidateProfile(
+                        4L,
+                        "recruiter@example.com")
+        );
+
+        assertEquals(403, exception.getStatusCode().value());
+        verify(profileService, never()).getRecruiterProfile(
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void returnsNotFoundForInvalidApplicationProfileId() {
+        User recruiter = new User();
+        recruiter.setId(20L);
+        recruiter.setRole("RECRUITER");
+        when(userRepository.findByEmail("recruiter@example.com"))
+                .thenReturn(Optional.of(recruiter));
+        when(applicationRepository.findWithApplicantAndJobById(404L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                com.atif.jobportal.exception.ApplicationNotFoundException.class,
+                () -> applicationService.getCandidateProfile(
+                        404L,
+                        "recruiter@example.com")
+        );
+        verify(profileService, never()).getRecruiterProfile(
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void preventsJobSeekerFromUsingRecruiterProfileService() {
+        User jobSeeker = new User();
+        jobSeeker.setId(12L);
+        jobSeeker.setRole("JOB_SEEKER");
+        when(userRepository.findByEmail("seeker@example.com"))
+                .thenReturn(Optional.of(jobSeeker));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> applicationService.getCandidateProfile(
+                        4L,
+                        "seeker@example.com")
+        );
+        verify(applicationRepository, never())
+                .findWithApplicantAndJobById(4L);
+        verify(profileService, never()).getRecruiterProfile(
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.any());
     }
 
     @Test

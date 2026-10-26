@@ -3,6 +3,8 @@ package com.atif.jobportal.service;
 import com.atif.jobportal.dto.JobSeekerProfileRequestDTO;
 import com.atif.jobportal.entity.JobSeekerProfile;
 import com.atif.jobportal.entity.ProfileEducation;
+import com.atif.jobportal.entity.ProfileExperience;
+import com.atif.jobportal.entity.ProfileProject;
 import com.atif.jobportal.entity.User;
 import com.atif.jobportal.repository.JobSeekerProfileRepository;
 import com.atif.jobportal.repository.UserRepository;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,7 +51,7 @@ class JobSeekerProfileServiceTest {
                 "encoded-password",
                 UserRole.JOB_SEEKER.name());
         jobSeeker.setId(12L);
-        when(userRepository.findByEmailIgnoreCase("taylor@example.com"))
+        lenient().when(userRepository.findByEmailIgnoreCase("taylor@example.com"))
                 .thenReturn(Optional.of(jobSeeker));
     }
 
@@ -113,5 +116,47 @@ class JobSeekerProfileServiceTest {
                 AccessDeniedException.class,
                 () -> profileService.getProfile("taylor@example.com"));
         verify(profileRepository, never()).findByUserId(12L);
+    }
+
+    @Test
+    void returnsCandidateProfileDetailsWithoutContactInformation() {
+        JobSeekerProfile profile = new JobSeekerProfile();
+        profile.setUser(jobSeeker);
+        profile.setPhoneNumber("private phone");
+        profile.setProfessionalSummary("Backend developer");
+        profile.getSkills().add("Java");
+        profile.getEducation().add(
+                new ProfileEducation("University", "BSc", "Computing", "2020", "2024"));
+        profile.getExperience().add(
+                new ProfileExperience("Company", "Intern", "Built APIs", "2023", "2024"));
+        profile.getProjects().add(
+                new ProfileProject("Portal", "Job portal", "Java, Spring"));
+        when(profileRepository.findByUserId(12L)).thenReturn(Optional.of(profile));
+
+        var response = profileService.getRecruiterProfile(
+                12L,
+                "Taylor Jobseeker");
+
+        assertTrue(response.exists());
+        assertEquals("Taylor Jobseeker", response.fullName());
+        assertEquals("Backend developer", response.professionalSummary());
+        assertEquals(java.util.List.of("Java"), response.skills());
+        assertEquals("University", response.education().getFirst().institution());
+        assertEquals("Built APIs", response.experience().getFirst().description());
+        assertEquals("Java, Spring", response.projects().getFirst().technologies());
+    }
+
+    @Test
+    void returnsAnEmptyCandidateProfileWhenApplicantHasNoProfile() {
+        when(profileRepository.findByUserId(12L)).thenReturn(Optional.empty());
+
+        var response = profileService.getRecruiterProfile(
+                12L,
+                "Taylor Jobseeker");
+
+        assertFalse(response.exists());
+        assertEquals("Taylor Jobseeker", response.fullName());
+        assertTrue(response.skills().isEmpty());
+        assertTrue(response.education().isEmpty());
     }
 }

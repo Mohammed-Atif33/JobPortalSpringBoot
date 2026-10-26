@@ -6,6 +6,7 @@ public class JobResponseDTO {
     private String title;
     private String description;
     private String location;
+    private String recruiterName;
     private Double salary;
     private Integer experience;
 
@@ -58,6 +59,14 @@ public class JobResponseDTO {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getRecruiterName() {
+        return recruiterName;
+    }
+
+    public void setRecruiterName(String recruiterName) {
+        this.recruiterName = recruiterName;
     }
 
     public Double getSalary() {

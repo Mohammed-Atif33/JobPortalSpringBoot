@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import com.atif.jobportal.repository.ApplicationRepository;
@@ -43,9 +44,15 @@ public class JobService {
         return convertToResponseDTO(savedJob);
     }
 
-    public List<JobResponseDTO> getAllJobs() {
+    @Transactional(readOnly = true)
+    public List<JobResponseDTO> getAllJobs(String search) {
 
-        return jobRepository.findAll()
+        String query = search == null ? "" : search.trim();
+        List<Job> jobs = query.isEmpty()
+                ? jobRepository.findAll()
+                : jobRepository.searchAvailableJobs(query);
+
+        return jobs
                 .stream()
                 .map(this::convertToResponseDTO)
                 .toList();
@@ -163,7 +170,7 @@ public class JobService {
 
     private JobResponseDTO convertToResponseDTO(Job job) {
 
-        return new JobResponseDTO(
+        JobResponseDTO response = new JobResponseDTO(
                 job.getId(),
                 job.getTitle(),
                 job.getDescription(),
@@ -171,5 +178,9 @@ public class JobService {
                 job.getSalary(),
                 job.getExperience()
         );
+        if (job.getRecruiter() != null) {
+            response.setRecruiterName(job.getRecruiter().getName());
+        }
+        return response;
     }
 }

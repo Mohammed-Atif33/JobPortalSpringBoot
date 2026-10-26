@@ -5,6 +5,7 @@ import com.atif.jobportal.application.ApplicationStatus;
 import com.atif.jobportal.dto.ApplicationRequestDTO;
 import com.atif.jobportal.dto.ApplicationResponseDTO;
 import com.atif.jobportal.dto.ApplicationStatusRequestDTO;
+import com.atif.jobportal.dto.RecruiterCandidateProfileResponseDTO;
 import com.atif.jobportal.entity.User;
 import com.atif.jobportal.exception.ApplicationNotFoundException;
 import com.atif.jobportal.exception.UserNotFoundException;
@@ -13,6 +14,8 @@ import com.atif.jobportal.job.Job;
 import com.atif.jobportal.repository.ApplicationRepository;
 import com.atif.jobportal.repository.JobRepository;
 import com.atif.jobportal.repository.UserRepository;
+import com.atif.jobportal.security.UserRole;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,15 +28,18 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final JobSeekerProfileService profileService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
-            JobRepository jobRepository) {
+            JobRepository jobRepository,
+            JobSeekerProfileService profileService) {
 
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
+        this.profileService = profileService;
     }
 
     @Transactional
@@ -91,7 +97,6 @@ public class ApplicationService {
                                 "Recruiter not found with email: " + email
                         )
                 );
-
         Application application = applicationRepository
                 .findWithApplicantAndJobById(id)
                 .orElseThrow(() ->
@@ -110,6 +115,45 @@ public class ApplicationService {
         }
 
         return convertToResponseDTO(application);
+    }
+
+    @Transactional(readOnly = true)
+    public RecruiterCandidateProfileResponseDTO getCandidateProfile(
+            Long applicationId,
+            String email) {
+        User recruiter = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Recruiter not found with email: " + email
+                        )
+                );
+        if (!UserRole.RECRUITER.name().equals(recruiter.getRole())) {
+            throw new AccessDeniedException(
+                    "Only recruiters can view applicant profiles.");
+        }
+
+        Application application = applicationRepository
+                .findWithApplicantAndJobById(applicationId)
+                .orElseThrow(() ->
+                        new ApplicationNotFoundException(
+                                "Application not found with id: " + applicationId
+                        )
+                );
+
+        Job job = application.getJob();
+        if (job == null
+                || job.getRecruiter() == null
+                || !job.getRecruiter().getId().equals(recruiter.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can only view profiles for applicants to your own jobs."
+            );
+        }
+
+        User applicant = application.getUser();
+        return profileService.getRecruiterProfile(
+                applicant.getId(),
+                applicant.getName());
     }
 
     public List<ApplicationResponseDTO> getApplicationsForJobSeeker(
