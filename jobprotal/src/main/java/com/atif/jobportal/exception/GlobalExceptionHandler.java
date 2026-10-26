@@ -48,6 +48,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(JobSeekerProfileNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleJobSeekerProfileNotFoundException(
+            JobSeekerProfileNotFoundException exception) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                exception.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorResponse handleValidationException(

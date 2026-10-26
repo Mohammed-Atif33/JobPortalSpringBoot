@@ -15,6 +15,7 @@ import com.atif.jobportal.repository.JobRepository;
 import com.atif.jobportal.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class ApplicationService {
         this.jobRepository = jobRepository;
     }
 
+    @Transactional
     public ApplicationResponseDTO createApplication(
             ApplicationRequestDTO request,
             String email) {
@@ -90,7 +92,8 @@ public class ApplicationService {
                         )
                 );
 
-        Application application = applicationRepository.findById(id)
+        Application application = applicationRepository
+                .findWithApplicantAndJobById(id)
                 .orElseThrow(() ->
                         new ApplicationNotFoundException(
                                 "Application not found with id: " + id
@@ -142,6 +145,7 @@ public class ApplicationService {
                 .toList();
     }
 
+    @Transactional
     public ApplicationResponseDTO updateApplicationStatus(
             Long id,
             ApplicationStatusRequestDTO request,
@@ -182,7 +186,7 @@ public class ApplicationService {
     private ApplicationResponseDTO convertToResponseDTO(
             Application application) {
 
-        return new ApplicationResponseDTO(
+        ApplicationResponseDTO response = new ApplicationResponseDTO(
                 application.getId(),
                 application.getUser().getId(),
                 application.getJob().getId(),
@@ -190,5 +194,18 @@ public class ApplicationService {
                 application.getUser().getName(),
                 application.getUser().getEmail()
         );
+
+        Job job = application.getJob();
+        if (job != null) {
+            response.setJobAvailable(true);
+            response.setJobTitle(job.getTitle());
+            response.setJobLocation(job.getLocation());
+            response.setSalary(job.getSalary());
+            response.setExperience(job.getExperience());
+            if (job.getRecruiter() != null) {
+                response.setRecruiterName(job.getRecruiter().getName());
+            }
+        }
+        return response;
     }
 }

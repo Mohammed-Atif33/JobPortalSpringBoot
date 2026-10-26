@@ -1,7 +1,9 @@
 package com.atif.jobportal.service;
 
 import com.atif.jobportal.application.Application;
+import com.atif.jobportal.application.ApplicationStatus;
 import com.atif.jobportal.dto.ApplicationRequestDTO;
+import com.atif.jobportal.dto.ApplicationResponseDTO;
 import com.atif.jobportal.entity.User;
 import com.atif.jobportal.job.Job;
 import com.atif.jobportal.repository.ApplicationRepository;
@@ -77,7 +79,7 @@ class ApplicationServiceTest {
 
         when(userRepository.findByEmail("recruiter@example.com"))
                 .thenReturn(Optional.of(recruiter));
-        when(applicationRepository.findById(3L))
+        when(applicationRepository.findWithApplicantAndJobById(3L))
                 .thenReturn(Optional.of(application));
 
         ResponseStatusException exception = assertThrows(
@@ -87,5 +89,83 @@ class ApplicationServiceTest {
         );
 
         assertEquals(403, exception.getStatusCode().value());
+    }
+
+    @Test
+    void jobSeekerGetsOnlyApplicationsScopedToAuthenticatedUser() {
+        User applicant = new User(
+                "Job Seeker",
+                "seeker@example.com",
+                "encoded",
+                "JOB_SEEKER");
+        applicant.setId(7L);
+        User recruiter = new User(
+                "Recruiter",
+                "recruiter@example.com",
+                "encoded",
+                "RECRUITER");
+        Job job = new Job("Java Developer", "Backend role", "Pune", 600000.0, 2);
+        job.setId(12L);
+        job.setRecruiter(recruiter);
+        Application application = new Application(
+                applicant,
+                job,
+                ApplicationStatus.APPLIED);
+        application.setId(4L);
+
+        when(userRepository.findByEmail("seeker@example.com"))
+                .thenReturn(Optional.of(applicant));
+        when(applicationRepository.findByUserId(7L))
+                .thenReturn(java.util.List.of(application));
+
+        java.util.List<ApplicationResponseDTO> results =
+                applicationService.getApplicationsForJobSeeker(
+                        "seeker@example.com");
+
+        assertEquals(1, results.size());
+        ApplicationResponseDTO response = results.getFirst();
+        assertEquals(7L, response.getUserId());
+        assertEquals(12L, response.getJobId());
+        assertEquals("Java Developer", response.getJobTitle());
+        assertEquals("Pune", response.getJobLocation());
+        assertEquals(600000.0, response.getSalary());
+        assertEquals(2, response.getExperience());
+        assertEquals("Recruiter", response.getRecruiterName());
+        assertEquals("APPLIED", response.getStatus());
+        assertEquals(true, response.isJobAvailable());
+        verify(applicationRepository).findByUserId(7L);
+    }
+
+    @Test
+    void responseHandlesMissingOptionalJobDetails() {
+        User applicant = new User(
+                "Job Seeker",
+                "seeker@example.com",
+                "encoded",
+                "JOB_SEEKER");
+        applicant.setId(7L);
+        Job job = new Job();
+        job.setId(12L);
+        Application application = new Application(
+                applicant,
+                job,
+                ApplicationStatus.SHORTLISTED);
+
+        when(userRepository.findByEmail("seeker@example.com"))
+                .thenReturn(Optional.of(applicant));
+        when(applicationRepository.findByUserId(7L))
+                .thenReturn(java.util.List.of(application));
+
+        ApplicationResponseDTO response = applicationService
+                .getApplicationsForJobSeeker("seeker@example.com")
+                .getFirst();
+
+        assertEquals(true, response.isJobAvailable());
+        assertEquals(null, response.getJobTitle());
+        assertEquals(null, response.getJobLocation());
+        assertEquals(null, response.getSalary());
+        assertEquals(null, response.getExperience());
+        assertEquals(null, response.getRecruiterName());
+        assertEquals("SHORTLISTED", response.getStatus());
     }
 }

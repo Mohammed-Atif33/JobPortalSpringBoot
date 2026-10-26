@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102a43">
+    <title>My Profile | CareerNest</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body class="dashboard-page">
+    <header class="dashboard-topbar">
+        <a class="nav-logo" href="index.html"><span class="brand-mark">C</span><span>CareerNest</span></a>
+        <nav class="dashboard-nav">
+            <a href="jobs.html">Find jobs</a>
+            <a href="jobs.html#my-applications-section">My applications</a>
+            <button id="logoutBtn" type="button" class="btn-outline-light">Logout</button>
+        </nav>
+    </header>
+
+    <main class="profile-container page-shell">
+        <section class="page-intro profile-intro">
+            <span class="eyebrow">JOB SEEKER WORKSPACE</span>
+            <h1>Your professional <span>profile.</span></h1>
+            <p>Keep your experience, skills, and projects up to date.</p>
+        </section>
+
+        <p id="profile-status" class="form-message" role="status" aria-live="polite"></p>
+        <div id="profile-loading" class="loading-state" role="status">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <p>Loading your profile...</p>
+        </div>
+
+        <section id="profile-view" class="profile-content-panel" hidden>
+            <div class="panel-heading profile-panel-heading">
+                <div>
+                    <span class="eyebrow">PERSONAL INFORMATION</span>
+                    <h2 id="profile-heading">Your profile</h2>
+                    <p>Only you can view and manage this information.</p>
+                </div>
+                <button id="edit-profile-button" type="button" class="btn-primary">Edit profile</button>
+            </div>
+            <div id="profile-view-content" class="profile-view-content"></div>
+        </section>
+
+        <form id="profile-form" class="profile-content-panel" hidden>
+            <div class="panel-heading profile-panel-heading">
+                <div>
+                    <span class="eyebrow">PROFILE DETAILS</span>
+                    <h2 id="profile-form-heading">Edit your profile</h2>
+                    <p>Your name is managed by your CareerNest account.</p>
+                </div>
+            </div>
+
+            <section class="profile-form-section">
+                <h3>Personal Information</h3>
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label for="profile-full-name">Full name</label>
+                        <input id="profile-full-name" type="text" readonly>
+                    </div>
+                    <div class="field-group">
+                        <label for="profile-phone">Phone number</label>
+                        <input id="profile-phone" type="tel" maxlength="30"
+                            placeholder="+1 555 010 1234" autocomplete="tel">
+                    </div>
+                </div>
+            </section>
+
+            <section class="profile-form-section">
+                <h3>Professional Summary</h3>
+                <div class="field-group">
+                    <label for="profile-summary">Summary</label>
+                    <textarea id="profile-summary" rows="5" maxlength="5000"
+                        placeholder="Describe your professional background and goals"></textarea>
+                </div>
+            </section>
+
+            <section class="profile-form-section">
+                <h3>Skills</h3>
+                <div class="field-group">
+                    <label for="profile-skills">Skills</label>
+                    <textarea id="profile-skills" rows="4"
+                        placeholder="Add one skill per line, for example: Java&#10;Spring Boot"></textarea>
+                    <span class="profile-field-hint">Enter up to 30 skills, one per line.</span>
+                </div>
+            </section>
+
+            <section class="profile-form-section">
+                <div class="profile-section-heading">
+                    <div>
+                        <h3>Education</h3>
+                        <p>Add your education and training.</p>
+                    </div>
+                    <button id="add-education-button" type="button" class="btn-secondary btn-small">Add education</button>
+                </div>
+                <div id="education-entries" class="profile-entry-list"></div>
+            </section>
+
+            <section class="profile-form-section">
+                <div class="profile-section-heading">
+                    <div>
+                        <h3>Work Experience</h3>
+                        <p>Include professional roles and internships.</p>
+                    </div>
+                    <button id="add-experience-button" type="button" class="btn-secondary btn-small">Add experience</button>
+                </div>
+                <div id="experience-entries" class="profile-entry-list"></div>
+            </section>
+
+            <section class="profile-form-section">
+                <div class="profile-section-heading">
+                    <div>
+                        <h3>Projects</h3>
+                        <p>Showcase projects and the technologies you used.</p>
+                    </div>
+                    <button id="add-project-button" type="button" class="btn-secondary btn-small">Add project</button>
+                </div>
+                <div id="project-entries" class="profile-entry-list"></div>
+            </section>
+
+            <div class="profile-form-actions">
+                <button id="cancel-profile-edit-button" type="button" class="btn-secondary">Cancel</button>
+                <button id="save-profile-button" type="submit" class="btn-primary">Save changes</button>
+            </div>
+        </form>
+    </main>
+
+    <footer class="site-footer">
+        <a class="footer-brand" href="index.html"><span class="brand-mark">C</span>CareerNest</a>
+        <p>© 2026 CareerNest. Built with Java and Spring Boot.</p>
+        <a href="jobs.html">Browse jobs</a>
+    </footer>
+</body>
+
+</html>
