@@ -166,6 +166,7 @@ public class JobService {
         job.setLocation(request.getLocation());
         job.setSalary(request.getSalary());
         job.setExperience(request.getExperience());
+        job.setEmploymentType(request.getEmploymentType());
     }
 
     private JobResponseDTO convertToResponseDTO(Job job) {
@@ -176,7 +177,8 @@ public class JobService {
                 job.getDescription(),
                 job.getLocation(),
                 job.getSalary(),
-                job.getExperience()
+                job.getExperience(),
+                job.getEmploymentType()
         );
         if (job.getRecruiter() != null) {
             response.setRecruiterName(job.getRecruiter().getName());

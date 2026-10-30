@@ -246,6 +246,7 @@ public class ApplicationService {
             response.setJobLocation(job.getLocation());
             response.setSalary(job.getSalary());
             response.setExperience(job.getExperience());
+            response.setEmploymentType(job.getEmploymentType());
             if (job.getRecruiter() != null) {
                 response.setRecruiterName(job.getRecruiter().getName());
             }

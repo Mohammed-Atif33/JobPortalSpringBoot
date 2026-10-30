@@ -21,6 +21,9 @@ public class Job {
 
     private Integer experience;
 
+    @Enumerated(EnumType.STRING)
+    private EmploymentType employmentType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recruiter_id")
     private User recruiter;
@@ -89,6 +92,14 @@ public class Job {
 
     public void setExperience(Integer experience) {
         this.experience = experience;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public void setEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
     }
 
     public User getRecruiter() {

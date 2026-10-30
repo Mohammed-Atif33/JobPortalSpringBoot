@@ -3,6 +3,8 @@ package com.atif.jobportal.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.NotNull;
+import com.atif.jobportal.job.EmploymentType;
 
 public class JobRequestDTO {
 
@@ -22,6 +24,9 @@ public class JobRequestDTO {
     @NotNull(message = "Experience cannot be null")
     @PositiveOrZero(message = "Experience cannot be negative")
     private Integer experience;
+
+    @NotNull(message = "Employment type cannot be null")
+    private EmploymentType employmentType;
 
     public JobRequestDTO() {
     }
@@ -64,5 +69,13 @@ public class JobRequestDTO {
 
     public void setExperience(Integer experience) {
         this.experience = experience;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public void setEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
     }
 }

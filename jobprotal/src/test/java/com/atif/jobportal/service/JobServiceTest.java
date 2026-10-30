@@ -1,6 +1,7 @@
 package com.atif.jobportal.service;
 
 import com.atif.jobportal.entity.User;
+import com.atif.jobportal.job.EmploymentType;
 import com.atif.jobportal.job.Job;
 import com.atif.jobportal.repository.ApplicationRepository;
 import com.atif.jobportal.repository.JobRepository;
@@ -38,12 +39,14 @@ class JobServiceTest {
         User recruiter = new User("CareerNest", "recruiter@example.com", "", "RECRUITER");
         Job job = new Job("Java Developer", "Build services", "Pune", 800000.0, 2);
         job.setRecruiter(recruiter);
+        job.setEmploymentType(EmploymentType.INTERNSHIP);
         when(jobRepository.findAll()).thenReturn(List.of(job));
 
         var results = jobService.getAllJobs("  ");
 
         assertEquals(1, results.size());
         assertEquals("CareerNest", results.getFirst().getRecruiterName());
+        assertEquals(EmploymentType.INTERNSHIP, results.getFirst().getEmploymentType());
         verify(jobRepository).findAll();
         verify(jobRepository, never()).searchAvailableJobs(org.mockito.ArgumentMatchers.any());
     }

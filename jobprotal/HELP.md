@@ -104,6 +104,37 @@ user account and is not editable here. With
 table and separate collection tables for skills, education, experience, and
 projects. Existing user accounts do not get a profile row until they create one.
 
+## Explicit demo-data reset (local development only)
+
+The opt-in `dev,demo-seed` Spring profiles replace the records in the local
+`springjobproject` database with two recruiters, seven job seekers and profiles,
+ten jobs, and 28 applications. It validates both the database name and a
+loopback MySQL host, and it refuses to run unless both reset flags are enabled.
+Both profiles must be active; the seeder is unavailable in production profiles.
+The seed runs transactionally and does not drop or recreate tables. Use it only
+after confirming that the configured database contains no data you need.
+
+From the `jobprotal` directory in PowerShell, run:
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "dev,demo-seed"
+$env:APP_DEMO_SEED_ENABLED = "true"
+$env:APP_DEMO_SEED_CONFIRM_RESET = "true"
+.\mvnw.cmd spring-boot:run
+```
+
+Use the existing local database configuration and JWT secret. On successful
+seeding, the application writes generated credentials for all nine demo
+accounts to `jobprotal/DEMO_CREDENTIALS.md`. The file is excluded from Git.
+Passwords are hashed with the configured Spring Security password encoder
+before they are stored and are never written to application logs or API
+responses. Unset the three environment variables after stopping the
+application. Normal application startup does not seed or reset data.
+
+Jobs use the existing employment types `INTERNSHIP` and `FULL_TIME`. Internship
+salary values in the demo data are monthly INR stipends; full-time values are
+annual INR salaries.
+
 ### Guides
 The following guides illustrate how to use some features concretely:
 

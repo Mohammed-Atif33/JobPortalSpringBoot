@@ -1,5 +1,7 @@
 package com.atif.jobportal.dto;
 
+import com.atif.jobportal.job.EmploymentType;
+
 public class JobResponseDTO {
 
     private Long id;
@@ -9,6 +11,7 @@ public class JobResponseDTO {
     private String recruiterName;
     private Double salary;
     private Integer experience;
+    private EmploymentType employmentType;
 
     public JobResponseDTO() {
     }
@@ -19,7 +22,8 @@ public class JobResponseDTO {
             String description,
             String location,
             Double salary,
-            Integer experience) {
+            Integer experience,
+            EmploymentType employmentType) {
 
         this.id = id;
         this.title = title;
@@ -27,6 +31,7 @@ public class JobResponseDTO {
         this.location = location;
         this.salary = salary;
         this.experience = experience;
+        this.employmentType = employmentType;
     }
 
     public Long getId() {
@@ -83,5 +88,13 @@ public class JobResponseDTO {
 
     public void setExperience(Integer experience) {
         this.experience = experience;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public void setEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
     }
 }

@@ -1,5 +1,7 @@
 package com.atif.jobportal.dto;
 
+import com.atif.jobportal.job.EmploymentType;
+
 public class ApplicationResponseDTO {
 
     private String applicantEmail;
@@ -12,6 +14,7 @@ public class ApplicationResponseDTO {
     private String jobLocation;
     private Double salary;
     private Integer experience;
+    private EmploymentType employmentType;
     private String recruiterName;
     private boolean jobAvailable;
 
@@ -104,6 +107,14 @@ public class ApplicationResponseDTO {
 
     public void setExperience(Integer experience) {
         this.experience = experience;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public void setEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
     }
 
     public String getRecruiterName() {
