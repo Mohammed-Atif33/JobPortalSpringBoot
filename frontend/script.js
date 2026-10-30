@@ -255,8 +255,10 @@ async function loadJobs() {
 
             const details = document.createElement("p");
             details.textContent =
+                `Type: ${job.employmentType === "INTERNSHIP" ? "Internship" : "Full-time"} | ` +
                 `Location: ${job.location || "Not specified"} | ` +
-                `Salary: ${job.salary ?? "Not specified"} | ` +
+                `Salary / stipend (${job.employmentType === "INTERNSHIP" ? "monthly" : "annual"}): ` +
+                `INR ${job.salary ?? "Not specified"} | ` +
                 `Experience: ${job.experience ?? "Not specified"}`;
 
             if (job.recruiterName) {
@@ -384,6 +386,7 @@ if (createJobForm) {
             title: document.getElementById("title").value.trim(),
             description: document.getElementById("description").value.trim(),
             location: document.getElementById("location").value.trim(),
+            employmentType: document.getElementById("employmentType").value,
             salary: Number(document.getElementById("salary").value),
             experience: Number(document.getElementById("experience").value)
         };
@@ -392,6 +395,7 @@ if (createJobForm) {
             !job.title ||
             !job.description ||
             !job.location ||
+            !["INTERNSHIP", "FULL_TIME"].includes(job.employmentType) ||
             document.getElementById("salary").value === "" ||
             document.getElementById("experience").value === "" ||
             !Number.isFinite(job.salary) ||
@@ -506,8 +510,10 @@ async function loadMyJobs() {
 
             const details = document.createElement("p");
             details.textContent =
+                `Type: ${job.employmentType === "INTERNSHIP" ? "Internship" : "Full-time"} | ` +
                 `Location: ${job.location || "Not specified"} | ` +
-                `Salary: ${job.salary ?? "Not specified"} | ` +
+                `Salary / stipend (${job.employmentType === "INTERNSHIP" ? "monthly" : "annual"}): ` +
+                `INR ${job.salary ?? "Not specified"} | ` +
                 `Experience: ${job.experience ?? "Not specified"} years`;
 
             const editButton = document.createElement("button");
@@ -563,7 +569,21 @@ async function editJob(job) {
         return;
     }
 
-    const salaryInput = prompt("Enter salary:", String(job.salary ?? ""));
+    const employmentType = prompt(
+        "Enter employment type (INTERNSHIP or FULL_TIME):",
+        job.employmentType || "FULL_TIME"
+    );
+    if (employmentType === null) return;
+    if (!["INTERNSHIP", "FULL_TIME"].includes(employmentType.trim().toUpperCase())) {
+        alert("Employment type must be INTERNSHIP or FULL_TIME.");
+        return;
+    }
+
+    const salaryCadence = job.employmentType === "INTERNSHIP" ? "monthly stipend" : "annual salary";
+    const salaryInput = prompt(
+        `Enter ${salaryCadence} in INR:`,
+        String(job.salary ?? "")
+    );
     if (salaryInput === null) return;
 
     const salary = Number(salaryInput);
@@ -605,6 +625,7 @@ async function editJob(job) {
                 title,
                 description,
                 location,
+                employmentType: employmentType.trim().toUpperCase(),
                 salary,
                 experience
             })
@@ -778,7 +799,9 @@ document.getElementById("loadApplicationsBtn")?.addEventListener("click", async 
 
             const details = document.createElement("p");
             details.textContent =
-                `Job ID: ${application.jobId} | Applicant ID: ${application.userId}`;
+                `${application.jobTitle || `Job #${application.jobId}`} | ` +
+                `${application.employmentType === "INTERNSHIP" ? "Internship" : "Full-time"} | ` +
+                `${application.jobLocation || "Location not specified"} | Applicant ID: ${application.userId}`;
 
             const applicantInfo = document.createElement("p");
             applicantInfo.textContent =
