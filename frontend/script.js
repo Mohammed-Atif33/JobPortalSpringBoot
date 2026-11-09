@@ -1,5 +1,5 @@
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "https://jobportalspringboot.onrender.com/api";
 
 function showMessage(elementId, message, type = "error") {
     const element = document.getElementById(elementId);
