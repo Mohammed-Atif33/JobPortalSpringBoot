@@ -107,6 +107,34 @@ async function completeGithubLogin() {
 const registerForm = document.getElementById("register-form");
 
 if (registerForm) {
+    const registerPassword = document.getElementById("register-password");
+    const registerPasswordToggle = document.getElementById("register-password-toggle");
+
+    if (registerPassword && registerPasswordToggle) {
+        const eyeIcon = registerPasswordToggle.querySelector(".password-eye-icon");
+        const eyeOffIcon = registerPasswordToggle.querySelector(".password-eye-off-icon");
+
+        const hidePassword = () => {
+            registerPassword.type = "password";
+            registerPasswordToggle.setAttribute("aria-label", "Show password");
+            eyeIcon.hidden = false;
+            eyeOffIcon.hidden = true;
+        };
+
+        registerPasswordToggle.addEventListener("click", () => {
+            const shouldShowPassword = registerPassword.type === "password";
+            registerPassword.type = shouldShowPassword ? "text" : "password";
+            registerPasswordToggle.setAttribute(
+                "aria-label",
+                shouldShowPassword ? "Hide password" : "Show password"
+            );
+            eyeIcon.hidden = shouldShowPassword;
+            eyeOffIcon.hidden = !shouldShowPassword;
+        });
+
+        registerForm.addEventListener("reset", hidePassword);
+    }
+
     registerForm.addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -211,37 +239,369 @@ completeGithubLogin();
 
 // ==================== PUBLIC JOB LIST ====================
 
+const JOBS_CACHE_TTL_MS = 60 * 1000;
+const APPLICATIONS_CACHE_TTL_MS = 30 * 1000;
+const jobResultsCache = new Map();
+const pendingJobsRequests = new Map();
+let jobRenderSequence = 0;
+let cachedMyApplications = null;
+let myApplicationsCachedAt = 0;
+let pendingMyApplicationsRequest = null;
+let currentJobDetails = null;
+let jobDetailsTrigger = null;
+let previousBodyOverflow = "";
+
+const jobDetailsDialog = document.getElementById("job-details-dialog");
+const jobDetailsTitle = document.getElementById("job-details-title");
+const jobDetailsRecruiter = document.getElementById("job-details-recruiter");
+const jobDetailsMeta = document.getElementById("job-details-meta");
+const jobDescriptionSection = document.getElementById("job-description-section");
+const jobDetailsDescription = document.getElementById("job-details-description");
+const jobDetailsFooter = document.getElementById("job-details-dialog-footer");
+const jobDetailsApplicationStatus = document.getElementById("job-details-application-status");
+const jobDetailsApplyButton = document.getElementById("job-details-apply");
+
+function renderJobSkeletons(jobList) {
+    const fragment = document.createDocumentFragment();
+    for (let index = 0; index < 3; index += 1) {
+        const card = document.createElement("article");
+        card.className = "job-card job-card-skeleton";
+        card.setAttribute("aria-hidden", "true");
+
+        ["skeleton-title", "skeleton-company", "", "skeleton-short"].forEach((className) => {
+            const line = document.createElement("span");
+            line.className = `skeleton-line ${className}`.trim();
+            card.appendChild(line);
+        });
+        fragment.appendChild(card);
+    }
+
+    jobList.replaceChildren(fragment);
+    jobList.setAttribute("aria-busy", "true");
+}
+
+function renderJobListState(jobList, message, stateClass, retry = false) {
+    const state = document.createElement("div");
+    state.className = `job-list-state ${stateClass}`;
+
+    const text = document.createElement("p");
+    text.textContent = message;
+    state.appendChild(text);
+
+    if (retry) {
+        const retryButton = document.createElement("button");
+        retryButton.type = "button";
+        retryButton.className = "btn-primary btn-small";
+        retryButton.textContent = "Retry";
+        retryButton.addEventListener("click", loadJobs);
+        state.appendChild(retryButton);
+    }
+
+    jobList.replaceChildren(state);
+    jobList.setAttribute("aria-busy", "false");
+}
+
+function hasCachedJobs(query) {
+    const cached = jobResultsCache.get(query);
+    return Boolean(cached && Date.now() - cached.cachedAt < JOBS_CACHE_TTL_MS);
+}
+
+async function fetchJobs(query) {
+    const url = new URL(`${API_BASE_URL}/jobs`);
+    if (query) url.searchParams.set("search", query);
+
+    let response;
+    try {
+        response = await fetch(url);
+    } catch {
+        throw new Error("Unable to connect to the server. Check your connection and retry.");
+    }
+
+    const jobs = await readResponse(response);
+
+    if (!response.ok) {
+        throw new Error(jobs.message || "Unable to load jobs. Please try again.");
+    }
+    if (!Array.isArray(jobs)) {
+        throw new Error("The jobs response was not in the expected format.");
+    }
+
+    return jobs;
+}
+
+function getJobs(query) {
+    const cached = jobResultsCache.get(query);
+    if (hasCachedJobs(query)) {
+        return Promise.resolve(cached.jobs);
+    }
+    if (cached) {
+        jobResultsCache.delete(query);
+    }
+
+    if (!pendingJobsRequests.has(query)) {
+        const request = fetchJobs(query)
+            .then((jobs) => {
+                jobResultsCache.set(query, { jobs, cachedAt: Date.now() });
+                if (jobResultsCache.size > 10) {
+                    jobResultsCache.delete(jobResultsCache.keys().next().value);
+                }
+                return jobs;
+            })
+            .finally(() => {
+                pendingJobsRequests.delete(query);
+            });
+        pendingJobsRequests.set(query, request);
+    }
+    return pendingJobsRequests.get(query);
+}
+
+async function fetchJobDetails(jobId) {
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}/jobs/${encodeURIComponent(jobId)}`);
+    } catch {
+        throw new Error("Unable to connect to the server. Check your connection and retry.");
+    }
+
+    const job = await readResponse(response);
+    if (!response.ok) {
+        throw new Error(job.message || "Unable to load job details.");
+    }
+    if (!job || typeof job !== "object" || Array.isArray(job)) {
+        throw new Error("The job details response was not in the expected format.");
+    }
+    if (String(job.id) !== String(jobId)) {
+        throw new Error("The job details response did not match the selected application.");
+    }
+
+    return job;
+}
+
+async function fetchMyApplications() {
+    const token = sessionStorage.getItem("jwtToken");
+    if (!token) {
+        throw new Error("Please sign in to check your application status.");
+    }
+
+    let response;
+    try {
+        response = await fetch(`${API_BASE_URL}/applications/my`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch {
+        throw new Error("Unable to connect to the server. Check your connection and retry.");
+    }
+
+    const applications = await readResponse(response);
+    if (response.status === 401) {
+        sessionStorage.removeItem("jwtToken");
+        sessionStorage.removeItem("userRole");
+        window.location.href = "login.html";
+        throw new Error("Your session has expired. Please sign in again.");
+    }
+    if (!response.ok) {
+        throw new Error(applications.message || "Unable to load your applications.");
+    }
+    if (!Array.isArray(applications)) {
+        throw new Error("The applications response was not in the expected format.");
+    }
+
+    cachedMyApplications = applications;
+    myApplicationsCachedAt = Date.now();
+    return applications;
+}
+
+function getMyApplications(forceRefresh = false) {
+    if (
+        !forceRefresh
+        && Array.isArray(cachedMyApplications)
+        && Date.now() - myApplicationsCachedAt < APPLICATIONS_CACHE_TTL_MS
+    ) {
+        return Promise.resolve(cachedMyApplications);
+    }
+
+    if (forceRefresh) {
+        cachedMyApplications = null;
+        myApplicationsCachedAt = 0;
+    }
+
+    if (!pendingMyApplicationsRequest) {
+        pendingMyApplicationsRequest = fetchMyApplications().finally(() => {
+            pendingMyApplicationsRequest = null;
+        });
+    }
+    return pendingMyApplicationsRequest;
+}
+
+function addJobDetail(label, value) {
+    if (value == null || String(value).trim() === "") return;
+
+    const item = document.createElement("div");
+    const term = document.createElement("dt");
+    const description = document.createElement("dd");
+    term.textContent = label;
+    description.textContent = value;
+    item.append(term, description);
+    jobDetailsMeta.appendChild(item);
+}
+
+function isActiveJobDetails(jobId) {
+    return Boolean(
+        jobDetailsDialog?.open
+        && String(currentJobDetails?.id) === String(jobId)
+    );
+}
+
+function setJobDetailsApplicationStatus(application) {
+    if (!isActiveJobDetails(application.jobId)) return;
+
+    const status = String(application.status || "Status unavailable").toUpperCase();
+    const knownStatuses = ["APPLIED", "SHORTLISTED", "SELECTED", "REJECTED"];
+    jobDetailsApplicationStatus.className = `job-details-application-status application-status-badge ${
+        knownStatuses.includes(status) ? `status-${status.toLowerCase()}` : "status-unknown"
+    }`;
+    jobDetailsApplicationStatus.textContent = `Application status: ${status}`;
+    jobDetailsApplicationStatus.hidden = false;
+    jobDetailsApplyButton.disabled = true;
+    jobDetailsApplyButton.textContent = "Already applied";
+}
+
+async function openJobDetails(job, trigger, application = null) {
+    if (!jobDetailsDialog || !jobDetailsDialog.showModal) return;
+
+    currentJobDetails = job;
+    jobDetailsTrigger = trigger;
+    jobDetailsTitle.textContent = job.title || "Job details";
+    jobDetailsRecruiter.textContent = job.recruiterName
+        ? `Recruiter: ${job.recruiterName}`
+        : "";
+    jobDetailsRecruiter.hidden = !job.recruiterName;
+    jobDetailsMeta.replaceChildren();
+
+    addJobDetail("Location", job.location);
+    if (job.salary != null) {
+        const period = job.employmentType === "INTERNSHIP" ? "monthly" : "annual";
+        addJobDetail("Salary", `INR ${Number(job.salary).toLocaleString("en-IN")} (${period})`);
+    }
+    if (job.experience != null) {
+        addJobDetail(
+            "Experience",
+            `${job.experience} ${job.experience === 1 ? "year" : "years"}`
+        );
+    }
+    if (job.employmentType) {
+        const employmentType = job.employmentType === "INTERNSHIP"
+            ? "Internship"
+            : job.employmentType === "FULL_TIME"
+                ? "Full-time"
+                : job.employmentType;
+        addJobDetail("Employment type", employmentType);
+    }
+
+    jobDetailsDescription.textContent = job.description || "";
+    jobDescriptionSection.hidden = !job.description;
+    jobDetailsApplicationStatus.hidden = true;
+    jobDetailsApplicationStatus.textContent = "";
+    jobDetailsApplicationStatus.className = "job-details-application-status";
+    const isRecruiter = sessionStorage.getItem("userRole") === "RECRUITER";
+    jobDetailsApplyButton.hidden = isRecruiter;
+    jobDetailsFooter.hidden = isRecruiter;
+    jobDetailsApplyButton.disabled = false;
+    jobDetailsApplyButton.textContent = "Apply Now";
+
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    jobDetailsDialog.showModal();
+    document.getElementById("close-job-details").focus();
+
+    if (application) {
+        setJobDetailsApplicationStatus(application);
+        return;
+    }
+
+    if (
+        sessionStorage.getItem("userRole") !== "JOB_SEEKER"
+        || !sessionStorage.getItem("jwtToken")
+    ) {
+        return;
+    }
+
+    jobDetailsApplicationStatus.textContent = "Checking application status...";
+    jobDetailsApplicationStatus.hidden = false;
+    jobDetailsApplyButton.disabled = true;
+    jobDetailsApplyButton.textContent = "Checking status...";
+
+    try {
+        const applications = await getMyApplications();
+        if (!jobDetailsDialog.open || currentJobDetails?.id !== job.id) return;
+
+        const existingApplication = applications.find(
+            (application) => String(application.jobId) === String(job.id)
+        );
+        if (existingApplication) {
+            setJobDetailsApplicationStatus(existingApplication);
+        } else {
+            jobDetailsApplicationStatus.hidden = true;
+            jobDetailsApplyButton.disabled = false;
+            jobDetailsApplyButton.textContent = "Apply Now";
+        }
+    } catch (error) {
+        if (!jobDetailsDialog.open || currentJobDetails?.id !== job.id) return;
+        jobDetailsApplicationStatus.textContent =
+            error.message || "Unable to check application status.";
+        jobDetailsApplicationStatus.className = "job-details-application-status";
+        jobDetailsApplyButton.disabled = false;
+        jobDetailsApplyButton.textContent = "Apply Now";
+    }
+}
+
+function closeJobDetails() {
+    if (!jobDetailsDialog?.open || jobDetailsDialog.classList.contains("is-closing")) return;
+
+    jobDetailsDialog.classList.add("is-closing");
+    window.setTimeout(() => {
+        if (jobDetailsDialog.open) jobDetailsDialog.close();
+    }, 180);
+}
+
+function openJobFromHash(jobs) {
+    const match = window.location.hash.match(/^#job-(\d+)$/);
+    if (!match) return;
+
+    const job = jobs.find((entry) => String(entry.id) === match[1]);
+    if (job) openJobDetails(job, null);
+}
+
 async function loadJobs() {
     const jobList = document.getElementById("job-list");
     if (!jobList) return;
 
-    jobList.textContent = "Loading jobs...";
+    const renderSequence = ++jobRenderSequence;
 
     try {
         const searchInput = document.getElementById("job-search-input");
         const query = searchInput ? searchInput.value.trim() : "";
         const searchMessage = document.getElementById("job-search-message");
         if (searchMessage) searchMessage.textContent = "";
-        const url = new URL(`${API_BASE_URL}/jobs`);
-        if (query) url.searchParams.set("search", query);
+        if (!hasCachedJobs(query)) {
+            renderJobSkeletons(jobList);
+        }
 
-        const response = await fetch(url);
-        const jobs = await readResponse(response);
+        const jobs = await getJobs(query);
+        if (renderSequence !== jobRenderSequence) return;
 
-        if (!response.ok) {
-            jobList.textContent = "Unable to load jobs.";
+        if (jobs.length === 0) {
+            renderJobListState(
+                jobList,
+                query
+                    ? "No jobs match your search. Try a different title, recruiter, or location."
+                    : "No jobs are available right now.",
+                "job-list-empty"
+            );
             return;
         }
 
-        if (!Array.isArray(jobs) || jobs.length === 0) {
-            jobList.textContent = query
-                ? "No jobs match your search. Try a different title, recruiter, or location."
-                : "No jobs are available right now.";
-            return;
-        }
-
-        jobList.replaceChildren();
-
+        const fragment = document.createDocumentFragment();
         jobs.forEach((job) => {
             const card = document.createElement("article");
             card.className = "job-card";
@@ -271,17 +631,73 @@ async function loadJobs() {
 
             const applyButton = document.createElement("button");
             applyButton.type = "button";
+            applyButton.className = "btn-primary btn-small";
             applyButton.textContent = "Apply Now";
-            applyButton.addEventListener("click", () => applyForJob(job.id));
+            applyButton.addEventListener("click", () => applyForJob(job.id, applyButton));
 
-            card.appendChild(applyButton);
-            jobList.appendChild(card);
+            const detailsButton = document.createElement("button");
+            detailsButton.type = "button";
+            detailsButton.className = "btn-secondary btn-small";
+            detailsButton.textContent = "View Job Details";
+            detailsButton.addEventListener("click", () => openJobDetails(job, detailsButton));
+
+            const actions = document.createElement("div");
+            actions.className = "job-card-actions";
+            actions.appendChild(detailsButton);
+            if (sessionStorage.getItem("userRole") !== "RECRUITER") {
+                actions.appendChild(applyButton);
+            }
+            card.appendChild(actions);
+            fragment.appendChild(card);
         });
+        jobList.replaceChildren(fragment);
+        jobList.setAttribute("aria-busy", "false");
+        openJobFromHash(jobs);
     } catch (error) {
         console.error("Job loading error:", error);
-        jobList.textContent = "Unable to connect to the server.";
+        if (renderSequence !== jobRenderSequence) return;
+        renderJobListState(
+            jobList,
+            error.message || "Unable to load jobs. Please check your connection and try again.",
+            "job-list-error",
+            true
+        );
     }
 }
+
+document.getElementById("close-job-details")?.addEventListener("click", closeJobDetails);
+jobDetailsApplyButton?.addEventListener("click", () => {
+    if (currentJobDetails) {
+        applyForJob(currentJobDetails.id, jobDetailsApplyButton, jobDetailsApplicationStatus);
+    }
+});
+jobDetailsDialog?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeJobDetails();
+});
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && jobDetailsDialog?.open) {
+        event.preventDefault();
+        closeJobDetails();
+    }
+});
+jobDetailsDialog?.addEventListener("click", (event) => {
+    if (event.target === jobDetailsDialog) closeJobDetails();
+});
+jobDetailsDialog?.addEventListener("close", () => {
+    jobDetailsDialog.classList.remove("is-closing");
+    document.body.style.overflow = previousBodyOverflow;
+    if (window.location.hash.startsWith("#job-")) {
+        window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname + window.location.search
+        );
+    }
+    if (jobDetailsTrigger?.isConnected) jobDetailsTrigger.focus();
+    jobDetailsTrigger = null;
+    currentJobDetails = null;
+});
 
 document.getElementById("job-search-form")?.addEventListener("submit", event => {
     event.preventDefault();
@@ -296,7 +712,7 @@ document.getElementById("clear-job-search")?.addEventListener("click", () => {
 
 // ==================== APPLY FOR JOB ====================
 
-async function applyForJob(jobId) {
+async function applyForJob(jobId, button = null, statusElement = null) {
     const token = sessionStorage.getItem("jwtToken");
 
     if (!token) {
@@ -304,6 +720,15 @@ async function applyForJob(jobId) {
         return;
     }
 
+    if (button?.disabled) return;
+
+    const originalButtonText = button?.textContent;
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Applying...";
+    }
+
+    let applicationCompleted = false;
     try {
         const response = await fetch(`${API_BASE_URL}/applications`, {
             method: "POST",
@@ -318,26 +743,92 @@ async function applyForJob(jobId) {
 
         if (response.status === 401) {
             sessionStorage.removeItem("jwtToken");
-                    sessionStorage.removeItem("userRole");
+            sessionStorage.removeItem("userRole");
             alert("Your session has expired. Please log in again.");
             window.location.href = "login.html";
             return;
         }
 
         if (response.status === 403) {
-            showApplyMessage("Your account does not have permission to apply.");
+            const message = "Your account does not have permission to apply.";
+            if (statusElement && isActiveJobDetails(jobId)) {
+                statusElement.textContent = message;
+                statusElement.hidden = false;
+            } else if (!statusElement) {
+                showApplyMessage(message);
+            }
+            return;
+        }
+
+        if (response.status === 409) {
+            const message = data.message || "You have already applied for this job.";
+            if (statusElement && sessionStorage.getItem("userRole") === "JOB_SEEKER") {
+                try {
+                    const applications = await getMyApplications(true);
+                    const existingApplication = applications.find(
+                        (application) => String(application.jobId) === String(jobId)
+                    );
+                    if (existingApplication) {
+                        setJobDetailsApplicationStatus(existingApplication);
+                    } else if (isActiveJobDetails(jobId)) {
+                        statusElement.textContent = message;
+                        statusElement.hidden = false;
+                    }
+                } catch (error) {
+                    if (isActiveJobDetails(jobId)) {
+                        statusElement.textContent = error.message || message;
+                        statusElement.hidden = false;
+                    }
+                }
+            } else if (statusElement && isActiveJobDetails(jobId)) {
+                statusElement.textContent = message;
+                statusElement.hidden = false;
+            } else if (!statusElement) {
+                showApplyMessage(message);
+            }
+            if (button && (!statusElement || isActiveJobDetails(jobId))) {
+                button.textContent = "Already applied";
+                applicationCompleted = true;
+            }
             return;
         }
 
         if (!response.ok) {
-            showApplyMessage(data.message || "Unable to submit your application.");
+            const message = data.message || "Unable to submit your application.";
+            if (statusElement && isActiveJobDetails(jobId)) {
+                statusElement.textContent = message;
+                statusElement.hidden = false;
+            } else if (!statusElement) {
+                showApplyMessage(message);
+            }
             return;
         }
 
-        showApplyMessage("Application submitted successfully!", "success");
+        cachedMyApplications = null;
+        myApplicationsCachedAt = 0;
+        if (statusElement) {
+            setJobDetailsApplicationStatus(data);
+        } else {
+            showApplyMessage("Application submitted successfully!", "success");
+        }
+        if (button && (!statusElement || isActiveJobDetails(jobId))) {
+            button.textContent = statusElement ? "Already applied" : "Applied";
+            applicationCompleted = true;
+        }
     } catch (error) {
         console.error("Application error:", error);
-        showApplyMessage("Unable to connect to the server.");
+        const message = "Unable to connect to the server.";
+        if (statusElement && isActiveJobDetails(jobId)) {
+            statusElement.textContent = message;
+            statusElement.hidden = false;
+        } else if (!statusElement) {
+            showApplyMessage(message);
+        }
+    } finally {
+        if (button && !applicationCompleted && (!statusElement || isActiveJobDetails(jobId))) {
+            button.disabled = false;
+            button.textContent = originalButtonText;
+        }
     }
 }
 
@@ -1058,29 +1549,9 @@ document.getElementById("loadMyApplicationsBtn")?.addEventListener("click", asyn
     list.appendChild(loading);
 
     try {
-        const response = await fetch(`${API_BASE_URL}/applications/my`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        const applications = await readResponse(response);
-
-        if (response.status === 401) {
-            sessionStorage.removeItem("jwtToken");
-            sessionStorage.removeItem("userRole");
-            window.location.href = "login.html";
-            return;
-        }
-
-        if (!response.ok) {
-            list.replaceChildren();
-            message.textContent = applications.message || "Unable to load your applications.";
-            return;
-        }
+        const applications = await getMyApplications();
 
         list.replaceChildren();
-        if (!Array.isArray(applications)) {
-            message.textContent = "Unable to load your applications.";
-            return;
-        }
 
         if (applications.length === 0) {
             message.textContent = "You have not applied to any jobs yet. Browse the latest opportunities above to get started.";
@@ -1175,10 +1646,27 @@ document.getElementById("loadMyApplicationsBtn")?.addEventListener("click", asyn
             if (jobAvailable && application.jobId != null) {
                 const actions = document.createElement("div");
                 actions.className = "application-actions";
-                const viewJob = document.createElement("a");
+                const viewJob = document.createElement("button");
+                viewJob.type = "button";
                 viewJob.className = "btn-secondary btn-small";
-                viewJob.href = `jobs.html#job-${encodeURIComponent(application.jobId)}`;
                 viewJob.textContent = "View Job Details";
+                viewJob.addEventListener("click", async () => {
+                    viewJob.disabled = true;
+                    viewJob.textContent = "Loading details...";
+                    try {
+                        const job = await fetchJobDetails(application.jobId);
+                        await openJobDetails(job, viewJob, application);
+                    } catch (error) {
+                        console.error("Job details loading error:", error);
+                        message.textContent =
+                            error.message || "Unable to load job details.";
+                    } finally {
+                        if (viewJob.isConnected) {
+                            viewJob.disabled = false;
+                            viewJob.textContent = "View Job Details";
+                        }
+                    }
+                });
                 actions.appendChild(viewJob);
                 card.appendChild(actions);
             }
@@ -1187,7 +1675,7 @@ document.getElementById("loadMyApplicationsBtn")?.addEventListener("click", asyn
     } catch (error) {
         console.error("My applications loading error:", error);
         list.replaceChildren();
-        message.textContent = "Unable to connect to the server.";
+        message.textContent = error.message || "Unable to load your applications.";
     }
 });
 

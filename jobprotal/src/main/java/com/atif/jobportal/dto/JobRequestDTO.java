@@ -3,7 +3,6 @@ package com.atif.jobportal.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.NotNull;
 import com.atif.jobportal.job.EmploymentType;
 
 public class JobRequestDTO {

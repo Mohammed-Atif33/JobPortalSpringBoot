@@ -43,10 +43,25 @@
                 </div>
             </form>
             <p id="job-search-message" class="status-message" role="status" aria-live="polite"></p>
-            <div id="job-list" class="job-list">
-                <div class="loading-state"><span class="loading-spinner"></span>
-                    <p>Loading jobs...</p>
-                </div>
+            <div id="job-list" class="job-list" aria-busy="true" aria-live="polite">
+                <article class="job-card job-card-skeleton" aria-hidden="true">
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-company"></span>
+                    <span class="skeleton-line"></span>
+                    <span class="skeleton-line skeleton-short"></span>
+                </article>
+                <article class="job-card job-card-skeleton" aria-hidden="true">
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-company"></span>
+                    <span class="skeleton-line"></span>
+                    <span class="skeleton-line skeleton-short"></span>
+                </article>
+                <article class="job-card job-card-skeleton" aria-hidden="true">
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-company"></span>
+                    <span class="skeleton-line"></span>
+                    <span class="skeleton-line skeleton-short"></span>
+                </article>
             </div>
         </section>
         <section id="my-applications-section" class="content-panel applications-panel" hidden>
@@ -61,6 +76,30 @@
             <div id="myApplicationsList" class="job-list"></div>
         </section>
     </main>
+
+    <dialog id="job-details-dialog" class="job-details-dialog" aria-labelledby="job-details-title">
+        <div class="job-details-dialog-header">
+            <div class="job-details-heading">
+                <span class="eyebrow">JOB DETAILS</span>
+                <h2 id="job-details-title"></h2>
+                <p id="job-details-recruiter" hidden></p>
+            </div>
+            <button type="button" id="close-job-details" class="modal-close-button"
+                aria-label="Close job details" autofocus>&times;</button>
+        </div>
+        <div class="job-details-dialog-body">
+            <dl id="job-details-meta" class="job-details-meta"></dl>
+            <section id="job-description-section" class="job-details-description" hidden>
+                <h3>About the role</h3>
+                <p id="job-details-description"></p>
+            </section>
+        </div>
+        <div id="job-details-dialog-footer" class="job-details-dialog-footer">
+            <p id="job-details-application-status" class="job-details-application-status"
+                role="status" aria-live="polite" hidden></p>
+            <button type="button" id="job-details-apply" class="btn-primary">Apply Now</button>
+        </div>
+    </dialog>
 
     <footer class="site-footer"><a class="footer-brand" href="index.html"><span class="brand-mark">C</span>
             CareerNest</a>
